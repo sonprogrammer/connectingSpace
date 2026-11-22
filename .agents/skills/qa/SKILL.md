@@ -13,7 +13,8 @@ description: Use when an agent is verifying a PR, defining acceptance criteria, 
 
 - 작업 위치와 브랜치는 `AGENTS.md`의 현재 작업 매핑을 따른다.
 - 작업 시작 전에 `pwd`와 `git branch --show-current`를 확인한다.
-- 예상한 QA 워크트리·브랜치가 아니거나 `main`이면 작업하지 않고 보고한다.
+- 예상한 QA 워크트리가 없으면 `AGENTS.md`의 규칙에 따라 `.worktrees/qa/<slug>`를 만들고 이동한다.
+- `main`에서는 작업하지 않는다. 올바른 QA 워크트리와 브랜치로 이동한 뒤 검증한다.
 - 기본 역할은 검증과 보고이며, 제품 기능 코드를 수정하지 않는다.
 
 ## 판정 상태
