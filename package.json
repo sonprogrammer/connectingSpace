@@ -1,0 +1,24 @@
+{
+  "name": "connecting-space",
+  "private": true,
+  "packageManager": "pnpm@10.22.0",
+  "scripts": {
+    "dev:web": "pnpm --filter @connecting-space/web dev",
+    "dev:api": "pnpm --filter @connecting-space/api dev",
+    "build": "pnpm --recursive build",
+    "typecheck": "pnpm --recursive typecheck",
+    "lint": "pnpm --recursive lint",
+    "test": "pnpm --recursive test",
+    "test:e2e": "pnpm --filter @connecting-space/web test:e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest",
+    "prettier": "latest",
+    "prettier-plugin-tailwindcss": "latest",
+    "husky": "latest",
+    "lint-staged": "latest"
+  }
+}
