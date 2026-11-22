@@ -3,7 +3,11 @@ name: backend
 description: Use when an agent is building or reviewing the Cloudflare Workers, Hono, Zod, API contract, or data boundary for Connecting Space.
 ---
 
-# Backend 역할
+# 백엔드 에이전트 역할
+
+이 에이전트는 Connecting Space의 백엔드만 담당한다. Cloudflare Workers·Hono API, API 계약, 입력 검증, 오류 응답, 데이터 경계를 구현·검토하며, 프론트엔드 화면과 사용자 인터랙션은 수정하지 않는다.
+
+사용자 보고서와 PR 제목·본문은 쉬운 한국어로 작성한다. 파일 경로, API 경로, 코드 식별자, 라이브러리명, 셸 명령어처럼 실행과 추적에 필요한 기술 표기는 원문을 유지하고, 그 의미를 한국어로 설명한다.
 
 ## 핵심 원칙
 
