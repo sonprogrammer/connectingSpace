@@ -40,6 +40,31 @@
 - 손 대표님이 확인하기 전에는 커밋·PR·머지를 진행하지 않는다.
 - 테스트는 개발 중 매번 실행하지 않고, PR 전 검증을 기본으로 한다.
 
+### 작업 워크트리 자동 준비
+
+새 이슈를 받으면 역할 폴더 안에 작업별 워크트리를 자동으로 준비한다. 자동 준비에는 `scripts/prepare-agent-worktree.sh`를 사용한다.
+
+1. 저장소 루트에서 `git fetch origin`을 실행한다.
+2. 이슈 번호와 짧은 작업명을 조합해 작업 slug를 정한다. 작업명이 없으면 `issue-<번호>`를 사용한다.
+3. `bash scripts/prepare-agent-worktree.sh <역할> <이슈번호> [slug]`를 실행한다.
+4. 스크립트가 출력한 경로로 이동한다.
+5. `pwd`와 `git branch --show-current`를 다시 확인한다.
+6. `main`에서는 파일을 수정하지 않는다.
+
+역할별 경로와 브랜치는 다음 규칙을 사용한다.
+
+- Planner: `.worktrees/planner/<slug>` / `chore/planner-<slug>`
+- Frontend: `.worktrees/frontend/<slug>` / `feat/frontend-<slug>`
+- Backend: `.worktrees/backend/<slug>` / `feat/backend-<slug>`
+- QA: `.worktrees/qa/<slug>` / `chore/qa-<slug>`
+
+예시:
+
+```bash
+WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh frontend 21 inquiry-form)"
+cd "$WORKTREE_PATH"
+```
+
 ### 현재 작업 매핑
 
 현재 기본 골격 작업은 아래 경로와 브랜치를 사용한다. 작업이 바뀌면 플래너가 이 표를 갱신한다.
@@ -55,7 +80,7 @@
 
 1. `pwd`로 현재 워크트리 경로를 확인한다.
 2. `git branch --show-current`로 현재 브랜치를 확인한다.
-3. 현재 경로와 브랜치가 역할 매핑과 다르면 작업하지 않고 플래너에게 보고한다.
+3. 현재 경로와 브랜치가 역할 매핑과 다르면 작업 워크트리를 준비·이동한다.
 4. `main` 브랜치에서는 코드를 수정하지 않는다.
 5. 역할 스킬과 담당 이슈를 읽은 뒤에만 작업을 시작한다.
 
