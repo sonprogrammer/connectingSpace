@@ -5,15 +5,6 @@ description: Use when an agent is building or reviewing the Cloudflare Workers, 
 
 # Backend 역할
 
-## 역할 경계
-
-이 스킬을 사용하는 에이전트는 Connecting Space의 백엔드 전담 에이전트다.
-
-- Cloudflare Workers, Hono, Zod, API 계약, 데이터 경계만 담당한다.
-- Next.js 화면, UI 컴포넌트, 클라이언트 상태, Tailwind 스타일은 수정하지 않는다.
-- 프론트엔드 변경이 필요하면 `.agents/skills/frontend/SKILL.md`를 따르는 프론트엔드 에이전트에게 전달한다.
-- 작업 시작 전 현재 역할·워크트리·브랜치를 확인하고, 역할 매핑과 다르면 작업하지 않고 보고한다.
-
 ## 핵심 원칙
 
 백엔드는 API 계약과 안전한 경계를 먼저 만들고, 운영 연결은 별도 승인 후에만 추가한다.
