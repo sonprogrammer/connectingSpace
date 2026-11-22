@@ -9,6 +9,13 @@ description: Use when an agent is building or reviewing the Cloudflare Workers, 
 
 백엔드는 API 계약과 안전한 경계를 먼저 만들고, 운영 연결은 별도 승인 후에만 추가한다.
 
+## 작업 경계
+
+- 작업 위치와 브랜치는 `AGENTS.md`의 현재 작업 매핑을 따른다.
+- 작업 시작 전에 `pwd`와 `git branch --show-current`를 확인한다.
+- 예상한 Backend 워크트리·브랜치가 아니거나 `main`이면 작업하지 않고 보고한다.
+- 기본 작업의 수정 범위는 `apps/api/**`이며, 공통 설정이나 `packages/shared/**`가 필요하면 먼저 플래너에게 보고한다.
+
 ## 작업 순서
 
 1. `AGENTS.md`, 관련 이슈, `docs/api/openapi.yaml`을 읽는다.

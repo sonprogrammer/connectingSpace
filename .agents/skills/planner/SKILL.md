@@ -9,6 +9,13 @@ description: Use when an agent is defining scope, dependencies, acceptance crite
 
 플래너는 구현을 대신하지 않고, 다른 에이전트가 같은 기준으로 작업할 수 있도록 범위와 완료 조건을 명확히 만든다.
 
+## 작업 경계
+
+- 작업 위치와 브랜치는 `AGENTS.md`의 현재 작업 매핑을 따른다.
+- 작업 시작 전에 `pwd`와 `git branch --show-current`를 확인한다.
+- `main`에서 구현 작업을 하지 않는다.
+- 기본 역할은 이슈·문서·범위 조정이며, 프론트엔드·백엔드 기능 코드를 직접 작성하지 않는다.
+
 ## 작업 순서
 
 1. `AGENTS.md`와 관련 이슈·설계 문서를 먼저 읽는다.

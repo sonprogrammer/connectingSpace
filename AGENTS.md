@@ -40,6 +40,25 @@
 - 손 대표님이 확인하기 전에는 커밋·PR·머지를 진행하지 않는다.
 - 테스트는 개발 중 매번 실행하지 않고, PR 전 검증을 기본으로 한다.
 
+### 현재 작업 매핑
+
+현재 기본 골격 작업은 아래 경로와 브랜치를 사용한다. 작업이 바뀌면 플래너가 이 표를 갱신한다.
+
+| 역할     | 워크트리 경로                      | 브랜치                        | 담당 이슈 |
+| -------- | ---------------------------------- | ----------------------------- | --------- |
+| Planner  | `.worktrees/planner/project-rules` | `chore/planner-project-rules` | 범위·조정 |
+| Frontend | `.worktrees/frontend/foundation`   | `feat/frontend-foundation`    | #5        |
+| Backend  | `.worktrees/backend/foundation`    | `feat/backend-foundation`     | #6        |
+| QA       | `.worktrees/qa/foundation`         | `chore/qa-foundation`         | #4        |
+
+### 작업 시작 전 확인
+
+1. `pwd`로 현재 워크트리 경로를 확인한다.
+2. `git branch --show-current`로 현재 브랜치를 확인한다.
+3. 현재 경로와 브랜치가 역할 매핑과 다르면 작업하지 않고 플래너에게 보고한다.
+4. `main` 브랜치에서는 코드를 수정하지 않는다.
+5. 역할 스킬과 담당 이슈를 읽은 뒤에만 작업을 시작한다.
+
 ## 안전 경계
 
 - 운영 DB, 실제 고객 정보, API 키, 비밀값을 다루지 않는다.
