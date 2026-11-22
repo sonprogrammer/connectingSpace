@@ -25,6 +25,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@connecting-space/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       hono:
         specifier: latest
         version: 4.13.19

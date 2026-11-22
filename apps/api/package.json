@@ -16,6 +16,7 @@
     "wrangler": "latest"
   },
   "dependencies": {
+    "@connecting-space/shared": "workspace:*",
     "hono": "latest",
     "zod": "latest"
   }

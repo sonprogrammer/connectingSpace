@@ -12,6 +12,7 @@ servers:
     description: 실제 배포 전 임시 주소
 
 tags:
+  - name: 시스템
   - name: 공개 문의
   - name: 관리자 문의
   - name: 관리자 계약서
@@ -21,6 +22,22 @@ tags:
   - name: 관리자 이메일
 
 paths:
+  /health:
+    get:
+      tags: [시스템]
+      summary: API 상태 확인
+      operationId: getHealth
+      description: 등록되지 않은 경로는 공통 `NOT_FOUND` 오류 응답을 반환한다.
+      responses:
+        '200':
+          description: API가 요청을 처리할 수 있는 상태
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /public/inquiries:
     post:
       tags: [공개 문의]
@@ -546,6 +563,13 @@ components:
       schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
 
   schemas:
+    HealthResponse:
+      type: object
+      required: [status, service]
+      properties:
+        status: { type: string, enum: [ok] }
+        service: { type: string, enum: [api] }
+
     InquiryType:
       type: string
       enum:
@@ -883,6 +907,11 @@ components:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     RateLimitError:
       description: 요청 한도 초과
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    InternalError:
+      description: 서버 내부 오류
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
