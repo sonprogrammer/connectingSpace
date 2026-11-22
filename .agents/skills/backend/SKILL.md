@@ -9,6 +9,14 @@ description: Use when an agent is building or reviewing the Cloudflare Workers, 
 
 백엔드는 API 계약과 안전한 경계를 먼저 만들고, 운영 연결은 별도 승인 후에만 추가한다.
 
+## 작업 경계
+
+- 작업 위치와 브랜치는 `AGENTS.md`의 현재 작업 매핑을 따른다.
+- 작업 시작 전에 `pwd`와 `git branch --show-current`를 확인한다.
+- 예상한 Backend 워크트리가 없으면 `WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh backend <이슈번호> [slug])"`를 실행하고 출력된 경로로 이동한다.
+- `main`에서는 작업하지 않는다. 올바른 Backend 워크트리와 브랜치로 이동한 뒤 작업한다.
+- 기본 작업의 수정 범위는 `apps/api/**`이며, 공통 설정이나 `packages/shared/**`가 필요하면 먼저 플래너에게 보고한다.
+
 ## 작업 순서
 
 1. `AGENTS.md`, 관련 이슈, `docs/api/openapi.yaml`을 읽는다.
