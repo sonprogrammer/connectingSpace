@@ -9,6 +9,14 @@ description: Use when an agent is verifying a PR, defining acceptance criteria, 
 
 검증 대상이 없는 상태를 성공이나 실패로 꾸미지 않고, 근거와 다음 조건을 함께 보고한다.
 
+## 작업 경계
+
+- 작업 위치와 브랜치는 `AGENTS.md`의 현재 작업 매핑을 따른다.
+- 작업 시작 전에 `pwd`와 `git branch --show-current`를 확인한다.
+- 예상한 QA 워크트리가 없으면 `WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh qa <이슈번호> [slug])"`를 실행하고 출력된 경로로 이동한다.
+- `main`에서는 작업하지 않는다. 올바른 QA 워크트리와 브랜치로 이동한 뒤 검증한다.
+- 기본 역할은 검증과 보고이며, 제품 기능 코드를 수정하지 않는다.
+
 ## 판정 상태
 
 - `PASS`: 기준을 실행으로 확인함
