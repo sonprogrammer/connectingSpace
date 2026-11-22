@@ -9,6 +9,13 @@ description: Use when an agent is building or reviewing the Next.js web applicat
 
 프론트엔드는 화면을 빠르게 늘리는 것보다 라우팅·컴포넌트·상태의 경계를 명확히 만든다.
 
+## 작업 경계
+
+- 작업 위치와 브랜치는 `AGENTS.md`의 현재 작업 매핑을 따른다.
+- 작업 시작 전에 `pwd`와 `git branch --show-current`를 확인한다.
+- 예상한 Frontend 워크트리·브랜치가 아니거나 `main`이면 작업하지 않고 보고한다.
+- 기본 작업의 수정 범위는 `apps/web/**`이며, 공통 설정이나 `packages/shared/**`가 필요하면 먼저 플래너에게 보고한다.
+
 ## 기본 구조
 
 - `app`: Next.js 라우팅, 레이아웃, 전역 Provider
