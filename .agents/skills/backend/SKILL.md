@@ -13,7 +13,8 @@ description: Use when an agent is building or reviewing the Cloudflare Workers, 
 
 - 작업 위치와 브랜치는 `AGENTS.md`의 현재 작업 매핑을 따른다.
 - 작업 시작 전에 `pwd`와 `git branch --show-current`를 확인한다.
-- 예상한 Backend 워크트리·브랜치가 아니거나 `main`이면 작업하지 않고 보고한다.
+- 예상한 Backend 워크트리가 없으면 `WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh backend <이슈번호> [slug])"`를 실행하고 출력된 경로로 이동한다.
+- `main`에서는 작업하지 않는다. 올바른 Backend 워크트리와 브랜치로 이동한 뒤 작업한다.
 - 기본 작업의 수정 범위는 `apps/api/**`이며, 공통 설정이나 `packages/shared/**`가 필요하면 먼저 플래너에게 보고한다.
 
 ## 작업 순서
