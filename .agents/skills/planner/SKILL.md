@@ -13,7 +13,7 @@ description: Use when an agent is defining scope, dependencies, acceptance crite
 
 - 작업 위치와 브랜치는 `AGENTS.md`의 현재 작업 매핑을 따른다.
 - 작업 시작 전에 `pwd`와 `git branch --show-current`를 확인한다.
-- Planner 작업 워크트리가 없으면 `WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh planner <이슈번호> [slug])"`를 실행하고 출력된 경로로 이동한다.
+- Planner 작업 워크트리가 없으면 `WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh planner <작업종류> <이슈번호> [slug])"`를 실행하고 출력된 경로로 이동한다.
 - `main`에서는 구현 작업을 하지 않는다. 문서 작업도 전용 Planner 워크트리에서 진행한다.
 - 기본 역할은 이슈·문서·범위 조정이며, 프론트엔드·백엔드 기능 코드를 직접 작성하지 않는다.
 

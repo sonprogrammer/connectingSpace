@@ -46,24 +46,26 @@
 
 1. 저장소 루트에서 `git fetch origin`을 실행한다.
 2. 이슈 번호와 짧은 작업명을 조합해 작업 slug를 정한다. 작업명이 없으면 `issue-<번호>`를 사용한다.
-3. `bash scripts/prepare-agent-worktree.sh <역할> <이슈번호> [slug]`를 실행한다.
+3. `bash scripts/prepare-agent-worktree.sh <역할> <작업종류> <이슈번호> [slug]`를 실행한다.
 4. 스크립트가 출력한 경로로 이동한다.
 5. `pwd`와 `git branch --show-current`를 다시 확인한다.
 6. `main`에서는 파일을 수정하지 않는다.
 
-역할별 경로와 브랜치는 다음 규칙을 사용한다.
+역할별 경로와 브랜치는 다음 규칙을 사용한다. 작업 종류는 `feat`, `fix`, `refactor`, `chore`, `docs`, `test` 중 하나를 사용한다.
 
-- Planner: `.worktrees/planner/<slug>` / `chore/planner-<slug>`
-- Frontend: `.worktrees/frontend/<slug>` / `feat/frontend-<slug>`
-- Backend: `.worktrees/backend/<slug>` / `feat/backend-<slug>`
-- QA: `.worktrees/qa/<slug>` / `chore/qa-<slug>`
+- Planner: `.worktrees/planner/<slug>` / `<작업종류>/planner-<slug>`
+- Frontend: `.worktrees/frontend/<slug>` / `<작업종류>/frontend-<slug>`
+- Backend: `.worktrees/backend/<slug>` / `<작업종류>/backend-<slug>`
+- QA: `.worktrees/qa/<slug>` / `<작업종류>/qa-<slug>`
 
 예시:
 
 ```bash
-WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh frontend 21 inquiry-form)"
+WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh frontend feat 21 inquiry-form)"
 cd "$WORKTREE_PATH"
 ```
+
+오류 수정은 `fix`, 구조 개선은 `refactor`, 문서·설정은 `chore` 또는 `docs`, 테스트 작업은 `test`를 사용한다.
 
 ### 현재 작업 매핑
 
@@ -79,7 +81,7 @@ cd "$WORKTREE_PATH"
 예를 들어 프론트엔드가 20번 이슈를 받으면 다음처럼 실행한다.
 
 ```bash
-WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh frontend 20 inquiry-form-api)"
+WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh frontend feat 20 inquiry-form-api)"
 cd "$WORKTREE_PATH"
 ```
 

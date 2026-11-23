@@ -3,13 +3,24 @@
 set -euo pipefail
 
 role="${1:-}"
-issue="${2:-}"
-slug="${3:-}"
+kind="${2:-}"
+issue="${3:-}"
+slug="${4:-}"
 
-if [[ -z "$role" || -z "$issue" ]]; then
-  echo "사용법: bash scripts/prepare-agent-worktree.sh <planner|frontend|backend|qa> <이슈번호> [slug]" >&2
+if [[ -z "$role" || -z "$kind" || -z "$issue" ]]; then
+  echo "사용법: bash scripts/prepare-agent-worktree.sh <planner|frontend|backend|qa> <feat|fix|refactor|chore|docs|test> <이슈번호> [slug]" >&2
   exit 1
 fi
+
+case "$role" in
+  planner|frontend|backend|qa) ;;
+  *) echo "지원하지 않는 역할입니다: $role" >&2; exit 1 ;;
+esac
+
+case "$kind" in
+  feat|fix|refactor|chore|docs|test) ;;
+  *) echo "지원하지 않는 작업 종류입니다: $kind" >&2; exit 1 ;;
+esac
 
 issue="${issue#\#}"
 
@@ -17,14 +28,6 @@ if [[ ! "$issue" =~ ^[0-9]+$ ]]; then
   echo "이슈 번호는 숫자여야 합니다: $issue" >&2
   exit 1
 fi
-
-case "$role" in
-  planner) branch_prefix="chore/planner-" ;;
-  frontend) branch_prefix="feat/frontend-" ;;
-  backend) branch_prefix="feat/backend-" ;;
-  qa) branch_prefix="chore/qa-" ;;
-  *) echo "지원하지 않는 역할입니다: $role" >&2; exit 1 ;;
-esac
 
 if [[ -z "$slug" ]]; then
   slug="issue-$issue"
@@ -45,7 +48,7 @@ cd "$repo_root"
 git fetch origin >&2
 
 worktree_path="$repo_root/.worktrees/$role/$slug"
-branch="${branch_prefix}${slug}"
+branch="${kind}/${role}-${slug}"
 
 if [[ -e "$worktree_path" ]]; then
   if [[ ! -d "$worktree_path/.git" && ! -f "$worktree_path/.git" ]]; then
