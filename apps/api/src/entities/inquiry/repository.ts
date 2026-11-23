@@ -15,6 +15,14 @@ export interface InquiryRepository {
   create(input: InquiryCreateInput): Promise<InquiryRecord>;
   list(): Promise<InquiryRecord[]>;
   findById(id: string): Promise<InquiryRecord | null>;
+  findDuplicate(
+    input: InquiryCreateInput,
+    since: string,
+  ): Promise<InquiryRecord | null>;
+  createIfNotDuplicate(
+    input: InquiryCreateInput,
+    since: string,
+  ): Promise<InquiryRecord | null>;
 }
 
 export type InquiryRow = {
