@@ -30,7 +30,9 @@ describe('InMemoryInquiryRepository', () => {
       createdAt: '2026-11-23T00:00:00.000Z',
       updatedAt: '2026-11-23T00:00:00.000Z',
     });
-    expect(inquiry.id).toMatch(/^inquiry-/);
+    expect(inquiry.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
   });
 
   it('lists inquiries and finds an inquiry by id', async () => {

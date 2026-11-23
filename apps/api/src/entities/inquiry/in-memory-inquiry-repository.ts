@@ -13,8 +13,7 @@ export class InMemoryInquiryRepository implements InquiryRepository {
 
   constructor(options: InMemoryInquiryRepositoryOptions = {}) {
     this.now = options.now ?? (() => new Date().toISOString());
-    this.idFactory =
-      options.idFactory ?? (() => `inquiry-${crypto.randomUUID()}`);
+    this.idFactory = options.idFactory ?? (() => crypto.randomUUID());
   }
 
   async create(input: InquiryCreateInput): Promise<InquiryRecord> {

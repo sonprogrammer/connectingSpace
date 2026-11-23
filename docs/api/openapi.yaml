@@ -584,7 +584,7 @@ components:
         ]
     InquiryStatus:
       type: string
-      enum: [신규, 상담 예정, 상담 완료, 견적 전달, 종료]
+      enum: [신규, 상담 예정, 상담 완료, 보류]
     ProjectStatus:
       type: string
       enum: [준비 중, 제작 중, 고객 검수, 수정 중, 완료, 보류]
@@ -602,17 +602,17 @@ components:
       type: object
       required: [businessName, contactName, email, phone, type, message]
       properties:
-        businessName: { type: string, minLength: 1, maxLength: 100 }
-        contactName: { type: string, minLength: 1, maxLength: 50 }
+        businessName: { type: string, minLength: 1, maxLength: 120 }
+        contactName: { type: string, minLength: 1, maxLength: 80 }
         email: { type: string, format: email, maxLength: 254 }
-        phone: { type: string, minLength: 7, maxLength: 30 }
+        phone: { type: string, minLength: 1, maxLength: 40 }
         type: { $ref: '#/components/schemas/InquiryType' }
         message: { type: string, minLength: 1, maxLength: 5000 }
-        timeline: { type: string, maxLength: 100 }
-        budget: { type: string, maxLength: 100 }
-        currentUrl: { type: string, format: uri, maxLength: 2048 }
-        referenceUrl: { type: string, format: uri, maxLength: 2048 }
-        turnstileToken: { type: string, maxLength: 2048 }
+        desiredSchedule: { type: string, maxLength: 120 }
+        budget: { type: string, maxLength: 120 }
+        currentSiteUrl: { type: string, format: uri, maxLength: 2048 }
+        referenceSiteUrl: { type: string, format: uri, maxLength: 2048 }
+        preferredContactMethod: { type: string, maxLength: 40 }
 
     InquiryCreatedResponse:
       type: object
@@ -647,10 +647,11 @@ components:
             email: { type: string, format: email }
             phone: { type: string }
             message: { type: string }
-            timeline: { type: string }
+            desiredSchedule: { type: string }
             budget: { type: string }
-            currentUrl: { type: string, format: uri }
-            referenceUrl: { type: string, format: uri }
+            currentSiteUrl: { type: string, format: uri }
+            referenceSiteUrl: { type: string, format: uri }
+            preferredContactMethod: { type: string }
             adminMemo: { type: string }
             contractId: { type: string, format: uuid, nullable: true }
             projectId: { type: string, format: uuid, nullable: true }
