@@ -1,0 +1,43 @@
+import type { InquiryCreateInput } from '@connecting-space/shared';
+import type { InquiryRecord, InquiryRepository } from './repository';
+
+type InMemoryInquiryRepositoryOptions = {
+  now?: () => string;
+  idFactory?: () => string;
+};
+
+export class InMemoryInquiryRepository implements InquiryRepository {
+  private readonly records = new Map<string, InquiryRecord>();
+  private readonly now: () => string;
+  private readonly idFactory: () => string;
+
+  constructor(options: InMemoryInquiryRepositoryOptions = {}) {
+    this.now = options.now ?? (() => new Date().toISOString());
+    this.idFactory =
+      options.idFactory ?? (() => `inquiry-${crypto.randomUUID()}`);
+  }
+
+  async create(input: InquiryCreateInput): Promise<InquiryRecord> {
+    const timestamp = this.now();
+    const record: InquiryRecord = {
+      ...input,
+      id: this.idFactory(),
+      status: '신규',
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+
+    this.records.set(record.id, record);
+    return record;
+  }
+
+  async list(): Promise<InquiryRecord[]> {
+    return [...this.records.values()].sort((a, b) =>
+      b.createdAt.localeCompare(a.createdAt),
+    );
+  }
+
+  async findById(id: string): Promise<InquiryRecord | null> {
+    return this.records.get(id) ?? null;
+  }
+}
