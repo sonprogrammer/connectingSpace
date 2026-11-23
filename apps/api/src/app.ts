@@ -6,6 +6,13 @@ import {
 import { registerInquiryRoutes } from './routes/inquiries';
 import type { InquiryRepository } from './entities/inquiry/repository';
 import type { InquiryRouteOptions } from './routes/inquiries';
+import {
+  ADMIN_INQUIRIES_PERMISSION,
+  createAdminAuthMiddleware,
+  createUnavailableAdminAuthProvider,
+  type AdminAuthProvider,
+  type AdminPrincipal,
+} from './auth/admin-auth';
 
 export type AppBindings = {
   DB?: D1Database;
@@ -13,6 +20,9 @@ export type AppBindings = {
 
 export type AppEnv = {
   Bindings: AppBindings;
+  Variables: {
+    admin: AdminPrincipal;
+  };
 };
 
 const notFoundResponse = {
@@ -28,8 +38,16 @@ const internalErrorResponse = {
 export const createApp = (
   repository?: InquiryRepository,
   inquiryRouteOptions?: InquiryRouteOptions,
+  adminAuthProvider?: AdminAuthProvider,
 ) => {
   const app = new Hono<AppEnv>();
+  const authProvider =
+    adminAuthProvider ?? createUnavailableAdminAuthProvider();
+
+  app.use(
+    '/admin/*',
+    createAdminAuthMiddleware(authProvider, ADMIN_INQUIRIES_PERMISSION),
+  );
 
   app.get('/health', (c) => {
     const response = healthResponseSchema.parse({
