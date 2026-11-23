@@ -69,12 +69,12 @@ cd "$WORKTREE_PATH"
 
 특정 기능을 하나의 워크트리나 브랜치에 고정하지 않는다. 각 에이전트는 새 이슈를 받을 때마다 이슈 번호와 작업명을 사용해 새 워크트리를 준비한다.
 
-| 역할     | 워크트리 기본 경로       | 브랜치 규칙                    |
-| -------- | ------------------------ | ------------------------------ |
-| Planner  | `.worktrees/planner/<slug>`  | `chore/planner-<slug>`         |
-| Frontend | `.worktrees/frontend/<slug>` | `feat/frontend-<slug>`         |
-| Backend  | `.worktrees/backend/<slug>`  | `feat/backend-<slug>`          |
-| QA       | `.worktrees/qa/<slug>`       | `chore/qa-<slug>`              |
+| 역할     | 워크트리 기본 경로           | 브랜치 규칙            |
+| -------- | ---------------------------- | ---------------------- |
+| Planner  | `.worktrees/planner/<slug>`  | `chore/planner-<slug>` |
+| Frontend | `.worktrees/frontend/<slug>` | `feat/frontend-<slug>` |
+| Backend  | `.worktrees/backend/<slug>`  | `feat/backend-<slug>`  |
+| QA       | `.worktrees/qa/<slug>`       | `chore/qa-<slug>`      |
 
 예를 들어 프론트엔드가 20번 이슈를 받으면 다음처럼 실행한다.
 
