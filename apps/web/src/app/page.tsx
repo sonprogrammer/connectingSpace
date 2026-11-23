@@ -1,12 +1,25 @@
+import { FaqSection } from '../widgets/landing/FaqSection';
+import { HeroSection } from '../widgets/landing/HeroSection';
+import { InquiryCtaSection } from '../widgets/landing/InquiryCtaSection';
+import { LandingFooter } from '../widgets/landing/LandingFooter';
+import { LandingHeader } from '../widgets/landing/LandingHeader';
+import { PhilosophySection } from '../widgets/landing/PhilosophySection';
+import { PortfolioSection } from '../widgets/landing/PortfolioSection';
+import { PricingSection } from '../widgets/landing/PricingSection';
+import { ProcessSection } from '../widgets/landing/ProcessSection';
+
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen items-center justify-center p-6">
-      <div className="w-full max-w-2xl border border-slate-200 p-8">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Connecting Space
-        </h1>
-        <p className="mt-3 text-slate-600">Web application foundation</p>
-      </div>
+    <main id="top">
+      <LandingHeader />
+      <HeroSection />
+      <PhilosophySection />
+      <ProcessSection />
+      <PortfolioSection />
+      <PricingSection />
+      <FaqSection />
+      <InquiryCtaSection />
+      <LandingFooter />
     </main>
   );
 }
