@@ -85,6 +85,8 @@ paths:
                 $ref: '#/components/schemas/AdminSummary'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
 
   /admin/inquiries:
     get:
@@ -117,6 +119,8 @@ paths:
                 $ref: '#/components/schemas/PaginatedInquiries'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
 
   /admin/inquiries/{inquiryId}:
     parameters:
@@ -135,6 +139,8 @@ paths:
                 $ref: '#/components/schemas/InquiryDetail'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
     patch:
@@ -159,6 +165,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
 
@@ -187,6 +195,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
 
@@ -207,6 +217,8 @@ paths:
                 $ref: '#/components/schemas/ContractVersion'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
     patch:
@@ -231,6 +243,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '409':
           description: 이미 전송·승인된 계약서는 수정할 수 없음
           content:
@@ -263,6 +277,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '429':
           $ref: '#/components/responses/RateLimitError'
         '503':
@@ -345,6 +361,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '409':
           description: 전송할 수 없는 계약서 상태
           content:
@@ -374,6 +392,8 @@ paths:
                 $ref: '#/components/schemas/PaginatedProjects'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
 
   /admin/projects/{projectId}:
     parameters:
@@ -392,6 +412,8 @@ paths:
                 $ref: '#/components/schemas/ProjectDetail'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
     patch:
@@ -416,6 +438,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
 
   /admin/projects/{projectId}/updates:
     post:
@@ -442,6 +466,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
 
   /customer/projects/{accessToken}:
     get:
@@ -483,6 +509,8 @@ paths:
                 $ref: '#/components/schemas/ProjectAccessLink'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
 
   /admin/project-access-links/{linkId}/revoke:
     post:
@@ -497,6 +525,8 @@ paths:
           description: 링크 차단 완료
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
 
@@ -525,6 +555,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
 
 components:
   securitySchemes:
@@ -532,7 +564,7 @@ components:
       type: apiKey
       in: cookie
       name: CF_Authorization
-      description: Cloudflare Access가 발급한 관리자 세션 쿠키를 실제 구현에서 검증한다.
+      description: Cloudflare Access가 발급한 관리자 세션 쿠키를 검증하며, 기본 세션 정책은 7일이다. 실제 연결 전에는 운영 설정을 별도로 승인한다.
 
   parameters:
     InquiryId:
@@ -899,7 +931,12 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     UnauthorizedError:
-      description: 관리자 인증 필요
+      description: 관리자 인증 필요 또는 세션 만료
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    ForbiddenError:
+      description: 인증됐지만 요청 작업에 필요한 관리자 권한이 없음
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
