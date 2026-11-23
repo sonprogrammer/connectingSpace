@@ -28,6 +28,14 @@ describe('공개 랜딩 위젯', () => {
     expect(screen.getByLabelText('연락처')).toBeInTheDocument();
     expect(screen.getByLabelText('문의 유형')).toBeInTheDocument();
     expect(screen.getByLabelText('문의 내용')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        '문의 내용을 남겨주시면 확인 후 선택한 연락 방법으로 상담 안내를 드립니다.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/문의 폼은 다음 단계에서 연결됩니다/),
+    ).not.toBeInTheDocument();
   });
 
   it('FAQ 항목을 키보드로 펼칠 수 있는 disclosure로 제공한다', () => {
