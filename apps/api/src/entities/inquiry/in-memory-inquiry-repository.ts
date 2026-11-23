@@ -39,4 +39,51 @@ export class InMemoryInquiryRepository implements InquiryRepository {
   async findById(id: string): Promise<InquiryRecord | null> {
     return this.records.get(id) ?? null;
   }
+
+  async findDuplicate(
+    input: InquiryCreateInput,
+    since: string,
+  ): Promise<InquiryRecord | null> {
+    return (
+      [...this.records.values()].find(
+        (record) =>
+          record.createdAt >= since &&
+          record.businessName === input.businessName &&
+          record.contactName === input.contactName &&
+          record.email === input.email &&
+          record.phone === input.phone &&
+          record.type === input.type &&
+          record.message === input.message,
+      ) ?? null
+    );
+  }
+
+  async createIfNotDuplicate(
+    input: InquiryCreateInput,
+    since: string,
+  ): Promise<InquiryRecord | null> {
+    const duplicate = [...this.records.values()].find(
+      (record) =>
+        record.createdAt >= since &&
+        record.businessName === input.businessName &&
+        record.contactName === input.contactName &&
+        record.email === input.email &&
+        record.phone === input.phone &&
+        record.type === input.type &&
+        record.message === input.message,
+    );
+    if (duplicate) return null;
+
+    const timestamp = this.now();
+    const record: InquiryRecord = {
+      ...input,
+      id: this.idFactory(),
+      status: '신규',
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+
+    this.records.set(record.id, record);
+    return record;
+  }
 }

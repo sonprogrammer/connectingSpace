@@ -45,6 +45,7 @@ paths:
       operationId: createPublicInquiry
       requestBody:
         required: true
+        description: UTF-8 기준 JSON 본문은 16KiB를 초과할 수 없다.
         content:
           application/json:
             schema:
@@ -60,8 +61,14 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '409':
           $ref: '#/components/responses/ConflictError'
+        '413':
+          $ref: '#/components/responses/RequestTooLargeError'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaTypeError'
         '429':
           $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /admin/summary:
     get:
@@ -908,6 +915,16 @@ components:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     RateLimitError:
       description: 요청 한도 초과
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    RequestTooLargeError:
+      description: 요청 본문 크기 초과
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    UnsupportedMediaTypeError:
+      description: 지원하지 않는 Content-Type
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
