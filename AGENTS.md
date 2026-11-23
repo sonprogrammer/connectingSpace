@@ -67,14 +67,37 @@ cd "$WORKTREE_PATH"
 
 ### 현재 작업 매핑
 
-현재 기본 골격 작업은 아래 경로와 브랜치를 사용한다. 작업이 바뀌면 플래너가 이 표를 갱신한다.
+특정 기능을 하나의 워크트리나 브랜치에 고정하지 않는다. 각 에이전트는 새 이슈를 받을 때마다 이슈 번호와 작업명을 사용해 새 워크트리를 준비한다.
 
-| 역할     | 워크트리 경로                      | 브랜치                        | 담당 이슈 |
-| -------- | ---------------------------------- | ----------------------------- | --------- |
-| Planner  | `.worktrees/planner/project-rules` | `chore/planner-project-rules` | 범위·조정 |
-| Frontend | `.worktrees/frontend/foundation`   | `feat/frontend-foundation`    | #5        |
-| Backend  | `.worktrees/backend/foundation`    | `feat/backend-foundation`     | #6        |
-| QA       | `.worktrees/qa/foundation`         | `chore/qa-foundation`         | #4        |
+| 역할     | 워크트리 기본 경로       | 브랜치 규칙                    |
+| -------- | ------------------------ | ------------------------------ |
+| Planner  | `.worktrees/planner/<slug>`  | `chore/planner-<slug>`         |
+| Frontend | `.worktrees/frontend/<slug>` | `feat/frontend-<slug>`         |
+| Backend  | `.worktrees/backend/<slug>`  | `feat/backend-<slug>`          |
+| QA       | `.worktrees/qa/<slug>`       | `chore/qa-<slug>`              |
+
+예를 들어 프론트엔드가 20번 이슈를 받으면 다음처럼 실행한다.
+
+```bash
+WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh frontend 20 inquiry-form-api)"
+cd "$WORKTREE_PATH"
+```
+
+기존 `foundation` 워크트리는 참고용이며, 새 이슈의 작업 장소로 재사용하지 않는다.
+
+### 문의 확보 MVP 착수 순서
+
+플래너 이슈 #14의 기준이 확인된 뒤 아래 순서로 진행한다.
+
+1. Backend: #15 문의 데이터 모델과 저장소
+2. Frontend: #16 공개 랜딩페이지 기본 화면
+3. Backend: #19 관리자 인증 경계와 7일 세션
+4. Backend: #18 공개 문의 접수 API
+5. Frontend: #17 관리자 문의 관리 화면
+6. Frontend: #20 공개 문의 폼과 API 연결
+7. QA: #21 통합 검증
+
+각 에이전트는 이슈를 받으면 먼저 자신의 역할 워크트리를 만들고, 그 경로와 브랜치를 확인한 뒤 작업한다. 손 대표님의 확인 전에는 커밋·푸시·PR을 만들지 않는다.
 
 ### 작업 시작 전 확인
 
