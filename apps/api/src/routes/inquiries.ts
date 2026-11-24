@@ -1,8 +1,14 @@
-import { inquiryCreateInputSchema } from '@connecting-space/shared';
+import {
+  inquiryCreateInputSchema,
+  inquiryStatusSchema,
+  inquiryTypeSchema,
+} from '@connecting-space/shared';
+import { z } from 'zod';
 import type { Context } from 'hono';
 import type { AppEnv } from '../app';
 import { D1InquiryRepository } from '../entities/inquiry/d1-inquiry-repository';
 import type { InquiryRepository } from '../entities/inquiry/repository';
+import type { InquiryRecord } from '../entities/inquiry/repository';
 
 export const MAX_INQUIRY_BODY_BYTES = 16 * 1024;
 const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
@@ -36,6 +42,20 @@ const internalErrorResponse = {
   code: 'INTERNAL_ERROR',
   message: '서버에서 요청을 처리하지 못했습니다.',
 } as const;
+
+const notFoundInquiryResponse = {
+  code: 'NOT_FOUND',
+  message: '문의를 찾을 수 없습니다.',
+} as const;
+
+const adminUpdateSchema = z
+  .object({
+    status: inquiryStatusSchema.optional(),
+    adminMemo: z.string().trim().max(10_000).optional(),
+  })
+  .refine(
+    (input) => input.status !== undefined || input.adminMemo !== undefined,
+  );
 
 const readBodyWithinLimit = async (
   request: Request,
@@ -78,6 +98,61 @@ const getRepository = (
 ): InquiryRepository | null => {
   if (repository) return repository;
   return context.env.DB ? new D1InquiryRepository(context.env.DB) : null;
+};
+
+const toInquirySummary = (inquiry: InquiryRecord) => ({
+  id: inquiry.id,
+  businessName: inquiry.businessName,
+  contactName: inquiry.contactName,
+  type: inquiry.type,
+  status: inquiry.status,
+  receivedAt: inquiry.createdAt,
+});
+
+const toInquiryDetail = (inquiry: InquiryRecord) => ({
+  ...toInquirySummary(inquiry),
+  email: inquiry.email,
+  phone: inquiry.phone,
+  message: inquiry.message,
+  desiredSchedule: inquiry.desiredSchedule,
+  budget: inquiry.budget,
+  currentSiteUrl: inquiry.currentSiteUrl,
+  referenceSiteUrl: inquiry.referenceSiteUrl,
+  preferredContactMethod: inquiry.preferredContactMethod,
+  adminMemo: inquiry.adminMemo,
+});
+
+const parseAdminListQuery = (query: Record<string, string | undefined>) => {
+  const page = query.page === undefined ? 1 : Number(query.page);
+  const pageSize = query.pageSize === undefined ? 20 : Number(query.pageSize);
+  const status = query.status
+    ? inquiryStatusSchema.safeParse(query.status)
+    : { success: true as const, data: undefined };
+  const type = query.type
+    ? inquiryTypeSchema.safeParse(query.type)
+    : { success: true as const, data: undefined };
+  const search = query.search?.trim();
+
+  if (
+    !Number.isInteger(page) ||
+    page < 1 ||
+    !Number.isInteger(pageSize) ||
+    pageSize < 1 ||
+    pageSize > 100 ||
+    !status.success ||
+    !type.success ||
+    (search !== undefined && search.length > 100)
+  ) {
+    return null;
+  }
+
+  return {
+    page,
+    pageSize,
+    status: status.data,
+    type: type.data,
+    search,
+  };
 };
 
 export const registerInquiryRoutes = (
@@ -142,6 +217,70 @@ export const registerInquiryRoutes = (
         },
         201,
       );
+    } catch {
+      return c.json(internalErrorResponse, 500);
+    }
+  });
+
+  app.get('/admin/inquiries', async (c) => {
+    const options = parseAdminListQuery(c.req.query());
+    if (!options) return c.json(validationErrorResponse, 400);
+
+    const inquiryRepository = getRepository(c, repository);
+    if (!inquiryRepository) return c.json(internalErrorResponse, 500);
+
+    try {
+      const result = await inquiryRepository.listAdmin(options);
+      return c.json(
+        {
+          ...result,
+          items: result.items.map(toInquirySummary),
+        },
+        200,
+      );
+    } catch {
+      return c.json(internalErrorResponse, 500);
+    }
+  });
+
+  app.get('/admin/inquiries/:inquiryId', async (c) => {
+    const inquiryRepository = getRepository(c, repository);
+    if (!inquiryRepository) return c.json(internalErrorResponse, 500);
+
+    try {
+      const inquiry = await inquiryRepository.findById(
+        c.req.param('inquiryId'),
+      );
+      if (!inquiry) return c.json(notFoundInquiryResponse, 404);
+
+      return c.json(toInquiryDetail(inquiry), 200);
+    } catch {
+      return c.json(internalErrorResponse, 500);
+    }
+  });
+
+  app.patch('/admin/inquiries/:inquiryId', async (c) => {
+    let payload: unknown;
+    try {
+      payload = await c.req.json();
+    } catch {
+      return c.json(validationErrorResponse, 400);
+    }
+
+    const parsed = adminUpdateSchema.safeParse(payload);
+    if (!parsed.success) return c.json(validationErrorResponse, 400);
+
+    const inquiryRepository = getRepository(c, repository);
+    if (!inquiryRepository) return c.json(internalErrorResponse, 500);
+
+    try {
+      const inquiry = await inquiryRepository.update(
+        c.req.param('inquiryId'),
+        parsed.data,
+      );
+      if (!inquiry) return c.json(notFoundInquiryResponse, 404);
+
+      return c.json(toInquiryDetail(inquiry), 200);
     } catch {
       return c.json(internalErrorResponse, 500);
     }

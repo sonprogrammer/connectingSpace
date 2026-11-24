@@ -48,4 +48,54 @@ describe('InMemoryInquiryRepository', () => {
     expect(list[0]).toEqual(created);
     expect(detail).toEqual(created);
   });
+
+  it('lists inquiries with status, type, search, and pagination filters', async () => {
+    const repository = new InMemoryInquiryRepository({
+      now: () => '2026-11-23T00:00:00.000Z',
+      idFactory: (() => {
+        let index = 0;
+        return () => `inquiry-${++index}`;
+      })(),
+    });
+
+    await repository.create(inquiryInput);
+    await repository.create({
+      ...inquiryInput,
+      businessName: '다른 업체',
+      type: '기타',
+    });
+
+    const result = await repository.listAdmin({
+      page: 1,
+      pageSize: 1,
+      type: '기타',
+      search: '다른',
+    });
+
+    expect(result).toEqual({
+      items: [expect.objectContaining({ businessName: '다른 업체' })],
+      page: 1,
+      pageSize: 1,
+      total: 1,
+    });
+  });
+
+  it('updates inquiry status and the last internal memo', async () => {
+    const repository = new InMemoryInquiryRepository({
+      now: () => '2026-11-23T00:00:00.000Z',
+    });
+    const created = await repository.create(inquiryInput);
+
+    const updated = await repository.update(created.id, {
+      status: '상담 예정',
+      adminMemo: '합성 메모',
+    });
+
+    expect(updated).toMatchObject({
+      id: created.id,
+      status: '상담 예정',
+      adminMemo: '합성 메모',
+      updatedAt: '2026-11-23T00:00:00.000Z',
+    });
+  });
 });

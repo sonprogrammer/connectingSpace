@@ -2,6 +2,8 @@ import type { InquiryCreateInput } from '@connecting-space/shared';
 import {
   inquiryRowToRecord,
   type InquiryRecord,
+  type InquiryListOptions,
+  type InquiryUpdateInput,
   type InquiryRepository,
   type InquiryRow,
 } from './repository';
@@ -65,6 +67,55 @@ export class D1InquiryRepository implements InquiryRepository {
     return result.results.map(inquiryRowToRecord);
   }
 
+  async listAdmin(options: InquiryListOptions = {}) {
+    const page = options.page ?? 1;
+    const pageSize = options.pageSize ?? 20;
+    const conditions: string[] = [];
+    const bindings: (string | number)[] = [];
+
+    if (options.status) {
+      conditions.push('status = ?');
+      bindings.push(options.status);
+    }
+    if (options.type) {
+      conditions.push('type = ?');
+      bindings.push(options.type);
+    }
+    if (options.search?.trim()) {
+      const search = options.search
+        .trim()
+        .replaceAll('\\', '\\\\')
+        .replaceAll('%', '\\%')
+        .replaceAll('_', '\\_');
+      conditions.push(
+        "(business_name LIKE ? ESCAPE '\\' OR contact_name LIKE ? ESCAPE '\\' OR email LIKE ? ESCAPE '\\' OR phone LIKE ? ESCAPE '\\')",
+      );
+      const pattern = `%${search}%`;
+      bindings.push(pattern, pattern, pattern, pattern);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const count = await this.db
+      .prepare(`SELECT COUNT(*) AS total FROM inquiries ${where}`)
+      .bind(...bindings)
+      .first<{ total: number }>();
+    const result = await this.db
+      .prepare(
+        `SELECT * FROM inquiries ${where}
+         ORDER BY created_at DESC
+         LIMIT ? OFFSET ?`,
+      )
+      .bind(...bindings, pageSize, (page - 1) * pageSize)
+      .all<InquiryRow>();
+
+    return {
+      items: result.results.map(inquiryRowToRecord),
+      page,
+      pageSize,
+      total: count?.total ?? 0,
+    };
+  }
+
   async findById(id: string) {
     const row = await this.db
       .prepare('SELECT * FROM inquiries WHERE id = ?')
@@ -72,6 +123,32 @@ export class D1InquiryRepository implements InquiryRepository {
       .first<InquiryRow>();
 
     return row ? inquiryRowToRecord(row) : null;
+  }
+
+  async update(id: string, input: InquiryUpdateInput) {
+    const assignments: string[] = [];
+    const bindings: string[] = [];
+
+    if (input.status !== undefined) {
+      assignments.push('status = ?');
+      bindings.push(input.status);
+    }
+    if (input.adminMemo !== undefined) {
+      assignments.push('admin_memo = ?');
+      bindings.push(input.adminMemo);
+    }
+    if (!assignments.length) return this.findById(id);
+
+    await this.db
+      .prepare(
+        `UPDATE inquiries
+         SET ${assignments.join(', ')}, updated_at = ?
+         WHERE id = ?`,
+      )
+      .bind(...bindings, this.now(), id)
+      .run();
+
+    return this.findById(id);
   }
 
   async findDuplicate(input: InquiryCreateInput, since: string) {

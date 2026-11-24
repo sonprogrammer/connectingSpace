@@ -117,6 +117,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedInquiries'
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
@@ -662,6 +664,7 @@ components:
         receivedAt: { type: string, format: date-time }
 
     InquiryUpdateInput:
+      description: 상태 또는 내부 메모 중 하나 이상을 포함해야 한다.
       type: object
       properties:
         status: { $ref: '#/components/schemas/InquiryStatus' }

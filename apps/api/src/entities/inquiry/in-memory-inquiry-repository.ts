@@ -1,5 +1,10 @@
 import type { InquiryCreateInput } from '@connecting-space/shared';
-import type { InquiryRecord, InquiryRepository } from './repository';
+import type {
+  InquiryRecord,
+  InquiryRepository,
+  InquiryListOptions,
+  InquiryUpdateInput,
+} from './repository';
 
 type InMemoryInquiryRepositoryOptions = {
   now?: () => string;
@@ -36,8 +41,46 @@ export class InMemoryInquiryRepository implements InquiryRepository {
     );
   }
 
+  async listAdmin(options: InquiryListOptions = {}) {
+    const page = options.page ?? 1;
+    const pageSize = options.pageSize ?? 20;
+    const search = options.search?.trim().toLocaleLowerCase('ko-KR');
+    const filtered = [...this.records.values()]
+      .filter((record) => !options.status || record.status === options.status)
+      .filter((record) => !options.type || record.type === options.type)
+      .filter(
+        (record) =>
+          !search ||
+          [record.businessName, record.contactName, record.email, record.phone]
+            .join(' ')
+            .toLocaleLowerCase('ko-KR')
+            .includes(search),
+      )
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    return {
+      items: filtered.slice((page - 1) * pageSize, page * pageSize),
+      page,
+      pageSize,
+      total: filtered.length,
+    };
+  }
+
   async findById(id: string): Promise<InquiryRecord | null> {
     return this.records.get(id) ?? null;
+  }
+
+  async update(id: string, input: InquiryUpdateInput) {
+    const record = this.records.get(id);
+    if (!record) return null;
+
+    const updated: InquiryRecord = {
+      ...record,
+      ...input,
+      updatedAt: this.now(),
+    };
+    this.records.set(id, updated);
+    return updated;
   }
 
   async findDuplicate(
