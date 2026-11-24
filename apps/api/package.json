@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "verify:migration": "wrangler d1 execute connecting-space-local --local --config wrangler.local.toml --file=db/migrations/0001_create_inquiries.sql",
+    "verify:migration": "wrangler d1 migrations apply connecting-space-local --local --config wrangler.local.toml --force",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run"
