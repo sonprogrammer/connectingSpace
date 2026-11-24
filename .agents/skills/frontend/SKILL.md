@@ -17,6 +17,10 @@ description: Use when an agent is building or reviewing the Next.js web applicat
 - `main`에서는 작업하지 않는다. 올바른 Frontend 워크트리와 브랜치로 이동한 뒤 작업한다.
 - 기본 작업의 수정 범위는 `apps/web/**`이며, 공통 설정이나 `packages/shared/**`가 필요하면 먼저 플래너에게 보고한다.
 
+## PR 보고 규칙
+
+PR 생성 직후 첫 코멘트를 남긴다. 코멘트 첫 줄은 `## 역할: Frontend`로 시작하고, 변경 파일·주요 동작·실행한 검증 명령과 결과·미확인 사항을 포함한다. 수정 커밋을 추가하면 새 코멘트에 커밋 SHA와 재검증 결과를 남긴다.
+
 ## 기본 구조
 
 - `app`: Next.js 라우팅, 레이아웃, 전역 Provider

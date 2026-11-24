@@ -25,6 +25,10 @@ description: Use when an agent is verifying a PR, defining acceptance criteria, 
 - `NOT READY`: 구현·테스트·수용 기준이 아직 준비되지 않음
 - `N/A`: 이번 범위에 적용되지 않음
 
+## PR 코멘트 보고 규칙
+
+검증을 마치면 PR에 코멘트를 남긴다. 코멘트 첫 줄은 `## 역할: QA`로 시작한다. 검증 항목별 실제 결과와 근거를 적고, 마지막에 `PASS`, `FAIL`, `CONDITIONALLY READY`, `NOT READY`, `BLOCKED` 중 하나를 명시한다. PR에 수정 커밋이 올라오면 수정 전 결과를 재사용하지 말고 최신 커밋을 다시 검증한 뒤 새 코멘트를 남긴다.
+
 테스트 파일이 없으면 자동 테스트 실패가 아니라 `NOT READY`로 기록한다. 설치 실패는 제품 결함과 분리한다.
 
 ## PR 전 검증
@@ -43,6 +47,7 @@ description: Use when an agent is verifying a PR, defining acceptance criteria, 
 ```md
 ## QA Report
 
+- 역할: QA
 - 대상 PR:
 - 검증 환경:
 - 변경 범위:
@@ -63,7 +68,7 @@ description: Use when an agent is verifying a PR, defining acceptance criteria, 
 
 ## 최종 판정
 
-- READY / CONDITIONALLY READY / NOT READY
+- PASS / FAIL / CONDITIONALLY READY / NOT READY / BLOCKED
 ```
 
 ## 완료 판단
