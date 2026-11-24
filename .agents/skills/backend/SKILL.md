@@ -21,6 +21,10 @@ description: Use when an agent is building or reviewing the Cloudflare Workers, 
 - `main`에서는 작업하지 않는다. 올바른 Backend 워크트리와 브랜치로 이동한 뒤 작업한다.
 - 기본 작업의 수정 범위는 `apps/api/**`이며, 공통 설정이나 `packages/shared/**`가 필요하면 먼저 플래너에게 보고한다.
 
+## PR 보고 규칙
+
+PR 생성 직후 첫 코멘트를 남긴다. 코멘트 첫 줄은 `## 역할: Backend`로 시작하고, 변경 파일·API·데이터 변경·실행한 검증 명령과 결과·운영 미검증 사항을 포함한다. 수정 커밋을 추가하면 새 코멘트에 커밋 SHA와 재검증 결과를 남긴다. migration이나 배포 설정을 바꾼 경우 해당 검증 범위를 반드시 명시한다.
+
 ## 작업 순서
 
 1. `AGENTS.md`, 관련 이슈, `docs/api/openapi.yaml`을 읽는다.

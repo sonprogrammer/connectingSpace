@@ -34,6 +34,10 @@ description: Use when an agent is defining scope, dependencies, acceptance crite
 - 미결정 사항과 리스크
 - 역할별 작업 카드
 
+## PR 코멘트 규칙
+
+Planner가 PR을 검토하거나 조정 코멘트를 남길 때는 첫 줄을 `## 역할: Planner`로 시작한다. 코멘트에는 확인한 근거, 머지 판정, 남은 리스크, 필요한 후속 작업을 적는다. PR에 새 커밋이 올라오면 이전 코멘트에 의존하지 말고 새 검토 코멘트를 남긴다.
+
 ## 범위 보호
 
 - 제품 기능을 임의로 추가하지 않는다.
