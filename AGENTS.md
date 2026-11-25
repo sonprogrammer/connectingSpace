@@ -17,7 +17,7 @@
 
 ## 기술 기준
 
-- 웹: Next.js, TypeScript, App Router, 정적 export 우선
+- 웹: Next.js, TypeScript, App Router, vinext 기반 Cloudflare Worker
 - 스타일: Tailwind CSS, shadcn/ui
 - 상태: React Query는 서버 상태, Zustand는 전역 UI 상태에 사용한다.
 - API: Cloudflare Workers, Hono
