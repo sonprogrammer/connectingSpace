@@ -1,0 +1,7 @@
+apps/web/.cloudflare
+apps/web/.next
+apps/web/.vinext
+apps/web/dist
+apps/web/next-env.d.ts
+apps/web/out
+apps/web/tsconfig.tsbuildinfo
