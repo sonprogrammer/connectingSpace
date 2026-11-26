@@ -10,6 +10,11 @@ export default defineConfig({
     },
     env: {
       ASSETS: bindings.assets(),
+      DB: bindings.d1({
+        id: '49000000-0000-4000-8000-000000000049',
+        name: 'connecting-space-local',
+        dev: { remote: false },
+      }),
     },
   }),
 });

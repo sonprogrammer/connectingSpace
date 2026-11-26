@@ -11,6 +11,7 @@
     "deploy": "vinext-cloudflare deploy",
     "typegen:cloudflare": "cf workers types",
     "typegen:next": "next typegen",
+    "verify:migration": "cf d1 migrations apply 49000000-0000-4000-8000-000000000049 --local --dir db/migrations",
     "typecheck:web": "pnpm run typegen:cloudflare && pnpm run typegen:next && tsc --noEmit",
     "typecheck": "pnpm run typecheck:web && pnpm --filter @connecting-space/api typecheck && pnpm --filter @connecting-space/shared typecheck",
     "lint:web": "eslint src eslint.config.mjs next.config.ts vite.config.ts cloudflare.config.ts vitest.web.config.mts tailwind.config.ts postcss.config.mjs",
