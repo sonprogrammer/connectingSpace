@@ -40,3 +40,15 @@ jobs:
 
       - name: Check formatting
         run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build Worker
+        run: pnpm build

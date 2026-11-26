@@ -26,9 +26,11 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     ".cloudflare/types/**/*.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "*.config.ts",
+    "*.config.mts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "apps", "packages"]
 }
