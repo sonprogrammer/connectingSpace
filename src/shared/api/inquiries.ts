@@ -1,6 +1,6 @@
-import type { InquiryCreateInput } from '@connecting-space/shared';
+import type { InquiryCreateInput } from '../model/inquiry';
 
-export type { InquiryCreateInput } from '@connecting-space/shared';
+export type { InquiryCreateInput } from '../model/inquiry';
 
 export type InquirySubmitResult = {
   id: string;
