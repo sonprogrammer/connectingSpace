@@ -1,12 +1,14 @@
+import Link from 'next/link';
+
 import { AdminInquiryManager } from '../../features/admin-inquiries/AdminInquiryManager';
 
 export default function AdminPage() {
   return (
     <main className="admin-page">
       <header className="admin-page-header">
-        <a className="admin-brand" href="/">
+        <Link className="admin-brand" href="/">
           Connecting Space
-        </a>
+        </Link>
         <div>
           <span className="eyebrow">ADMIN</span>
           <h1>관리자 문의 관리</h1>

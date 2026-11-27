@@ -544,6 +544,393 @@ section {
   }
 }
 
+.admin-page {
+  width: min(100% - 3rem, 1440px);
+  margin: 0 auto;
+  padding: 2rem 0 5rem;
+}
+
+.admin-page-header {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.3fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 3rem;
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 0 3rem;
+}
+
+.admin-brand {
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.admin-page-header h1 {
+  margin: 0.75rem 0 0;
+  font-size: clamp(2.3rem, 5vw, 5rem);
+  font-weight: 500;
+  letter-spacing: -0.07em;
+  line-height: 1;
+}
+
+.admin-page-header p {
+  max-width: 640px;
+  margin: 1rem 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.admin-inquiry-manager {
+  display: grid;
+  gap: 1.5rem;
+  padding-top: 2rem;
+}
+
+.admin-filters {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1fr) minmax(150px, 0.45fr) minmax(190px, 0.6fr)
+    auto;
+  align-items: end;
+  gap: 1rem;
+  border: 1px solid var(--line);
+  padding: 1.25rem;
+  background: var(--surface);
+}
+
+.admin-filters label,
+.admin-update-form label {
+  display: grid;
+  gap: 0.55rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.admin-filters input,
+.admin-filters select,
+.admin-update-form select,
+.admin-update-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: 0.8rem 0.9rem;
+  background: var(--background);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 400;
+}
+
+.admin-filters input:focus,
+.admin-filters select:focus,
+.admin-update-form select:focus,
+.admin-update-form textarea:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  outline-offset: 2px;
+}
+
+.admin-filters .button {
+  min-height: 43px;
+  border: 0;
+  cursor: pointer;
+}
+
+.admin-workspace {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.72fr) minmax(0, 1.28fr);
+  align-items: start;
+  gap: 1.5rem;
+}
+
+.admin-list-panel,
+.admin-detail-panel {
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.admin-list-panel {
+  position: sticky;
+  top: 1.5rem;
+}
+
+.admin-detail-panel {
+  min-height: 520px;
+}
+
+.admin-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--line);
+  padding: 1.4rem;
+}
+
+.admin-panel-heading h2 {
+  margin: 0.45rem 0 0;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  overflow-wrap: anywhere;
+}
+
+.admin-panel-heading > span:not(.admin-status-badge) {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.admin-inquiry-list {
+  max-height: 650px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.admin-inquiry-list li + li {
+  border-top: 1px solid var(--line);
+}
+
+.admin-inquiry-list button {
+  display: grid;
+  width: 100%;
+  gap: 0.45rem;
+  border: 0;
+  padding: 1.2rem 1.4rem;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  transition: background-color 160ms ease;
+}
+
+.admin-inquiry-list button:hover,
+.admin-inquiry-list button[aria-pressed='true'] {
+  background: var(--surface-strong);
+}
+
+.admin-inquiry-list button[aria-pressed='true'] {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.admin-list-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--text);
+}
+
+.admin-list-topline strong {
+  overflow: hidden;
+  font-size: 0.95rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-status-badge {
+  display: inline-flex;
+  flex: none;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: 999px;
+  padding: 0.3rem 0.55rem;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  padding: 1rem 1.4rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.admin-pagination button {
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.admin-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.admin-detail-content {
+  display: grid;
+  gap: 0;
+}
+
+.admin-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-contact-grid > div {
+  min-width: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 1.4rem;
+}
+
+.admin-contact-grid > div:nth-child(2n) {
+  border-right: 0;
+}
+
+.admin-contact-grid dt {
+  margin-bottom: 0.4rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.admin-contact-grid dd {
+  margin: 0;
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.admin-customer-message,
+.admin-update-form {
+  padding: 1.5rem;
+}
+
+.admin-customer-message {
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-customer-message h3 {
+  margin: 0 0 0.8rem;
+  font-size: 0.82rem;
+}
+
+.admin-customer-message p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.admin-update-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.admin-update-form textarea {
+  min-height: 150px;
+  resize: vertical;
+  line-height: 1.65;
+}
+
+.admin-update-form .button {
+  justify-self: start;
+  border: 0;
+  cursor: pointer;
+}
+
+.admin-update-form .button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.admin-save-success {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.78rem;
+}
+
+.admin-state,
+.admin-empty {
+  display: grid;
+  min-height: 240px;
+  place-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.admin-state-error strong {
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.admin-state-error p {
+  margin: 0;
+}
+
+.admin-state-error .button {
+  justify-self: center;
+  border: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 960px) {
+  .admin-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-list-panel {
+    position: static;
+  }
+
+  .admin-inquiry-list {
+    max-height: 480px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-page {
+    width: min(100% - 1.5rem, 1440px);
+    padding-top: 1rem;
+  }
+
+  .admin-page-header {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    padding-bottom: 2rem;
+  }
+
+  .admin-filters,
+  .admin-contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-filters .button {
+    width: 100%;
+  }
+
+  .admin-contact-grid > div {
+    border-right: 0;
+  }
+
+  .admin-detail-panel {
+    min-height: 360px;
+  }
+
+  .admin-update-form .button {
+    width: 100%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

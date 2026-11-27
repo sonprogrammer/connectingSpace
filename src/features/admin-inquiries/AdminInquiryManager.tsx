@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import type { AdminInquiryListParams } from '../../entities/inquiry/model/admin-inquiry';
 import {
@@ -46,8 +46,11 @@ export function AdminInquiryManager() {
     pageSize: PAGE_SIZE,
   });
   const [selectedId, setSelectedId] = useState<string>();
-  const [status, setStatus] = useState<InquiryStatus>('신규');
-  const [adminMemo, setAdminMemo] = useState('');
+  const [draft, setDraft] = useState<{
+    inquiryId?: string;
+    status?: InquiryStatus;
+    adminMemo?: string;
+  }>({});
   const [saveMessage, setSaveMessage] = useState('');
 
   const listQuery = useQuery({
@@ -63,11 +66,14 @@ export function AdminInquiryManager() {
     retry: false,
   });
 
-  useEffect(() => {
-    if (!detailQuery.data) return;
-    setStatus(detailQuery.data.status);
-    setAdminMemo(detailQuery.data.adminMemo ?? '');
-  }, [detailQuery.data]);
+  const status =
+    detailQuery.data && draft.inquiryId === detailQuery.data.id
+      ? (draft.status ?? detailQuery.data.status)
+      : (detailQuery.data?.status ?? '신규');
+  const adminMemo =
+    detailQuery.data && draft.inquiryId === detailQuery.data.id
+      ? (draft.adminMemo ?? detailQuery.data.adminMemo ?? '')
+      : (detailQuery.data?.adminMemo ?? '');
 
   const updateMutation = useMutation({
     mutationFn: () =>
@@ -78,8 +84,11 @@ export function AdminInquiryManager() {
     onSuccess: (updated) => {
       queryClient.setQueryData(['admin-inquiry', updated.id], updated);
       void queryClient.invalidateQueries({ queryKey: ['admin-inquiries'] });
-      setStatus(updated.status);
-      setAdminMemo(updated.adminMemo ?? '');
+      setDraft({
+        inquiryId: updated.id,
+        status: updated.status,
+        adminMemo: updated.adminMemo ?? '',
+      });
       setSaveMessage('변경사항을 저장했습니다.');
     },
     onError: (error) => setSaveMessage(getErrorMessage(error)),
@@ -208,6 +217,7 @@ export function AdminInquiryManager() {
                     aria-pressed={selectedId === inquiry.id}
                     onClick={() => {
                       setSaveMessage('');
+                      setDraft({});
                       setSelectedId(inquiry.id);
                     }}
                   >
@@ -340,7 +350,11 @@ export function AdminInquiryManager() {
                   <select
                     value={status}
                     onChange={(event) =>
-                      setStatus(event.target.value as InquiryStatus)
+                      setDraft({
+                        inquiryId: detailQuery.data.id,
+                        status: event.target.value as InquiryStatus,
+                        adminMemo,
+                      })
                     }
                   >
                     {inquiryStatusSchema.options.map((option) => (
@@ -356,7 +370,13 @@ export function AdminInquiryManager() {
                     value={adminMemo}
                     rows={7}
                     maxLength={10_000}
-                    onChange={(event) => setAdminMemo(event.target.value)}
+                    onChange={(event) =>
+                      setDraft({
+                        inquiryId: detailQuery.data.id,
+                        status,
+                        adminMemo: event.target.value,
+                      })
+                    }
                   />
                 </label>
                 {saveMessage && (
