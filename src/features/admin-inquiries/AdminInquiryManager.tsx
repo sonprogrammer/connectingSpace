@@ -51,7 +51,6 @@ export function AdminInquiryManager() {
     status?: InquiryStatus;
     adminMemo?: string;
   }>({});
-  const [saveMessage, setSaveMessage] = useState('');
 
   const listQuery = useQuery({
     queryKey: ['admin-inquiries', filters],
@@ -59,10 +58,14 @@ export function AdminInquiryManager() {
     retry: false,
   });
 
+  const selectedInquiryIsVisible = Boolean(
+    selectedId && listQuery.data?.items.some((item) => item.id === selectedId),
+  );
+
   const detailQuery = useQuery({
     queryKey: ['admin-inquiry', selectedId],
     queryFn: () => getAdminInquiry(selectedId!),
-    enabled: Boolean(selectedId),
+    enabled: selectedInquiryIsVisible,
     retry: false,
   });
 
@@ -76,23 +79,36 @@ export function AdminInquiryManager() {
       : (detailQuery.data?.adminMemo ?? '');
 
   const updateMutation = useMutation({
-    mutationFn: () =>
-      updateAdminInquiry(selectedId!, {
-        status,
-        adminMemo,
-      }),
+    mutationFn: (input: {
+      inquiryId: string;
+      status: InquiryStatus;
+      adminMemo: string;
+    }) => {
+      const { inquiryId, ...update } = input;
+      return updateAdminInquiry(inquiryId, update);
+    },
     onSuccess: (updated) => {
       queryClient.setQueryData(['admin-inquiry', updated.id], updated);
       void queryClient.invalidateQueries({ queryKey: ['admin-inquiries'] });
-      setDraft({
-        inquiryId: updated.id,
-        status: updated.status,
-        adminMemo: updated.adminMemo ?? '',
-      });
-      setSaveMessage('변경사항을 저장했습니다.');
     },
-    onError: (error) => setSaveMessage(getErrorMessage(error)),
   });
+
+  const mutationMatchesSelection =
+    updateMutation.variables?.inquiryId === selectedId;
+  const hasNewerInput =
+    mutationMatchesSelection &&
+    updateMutation.variables !== undefined &&
+    (updateMutation.variables.status !== status ||
+      updateMutation.variables.adminMemo !== adminMemo);
+  const saveMessage = !mutationMatchesSelection
+    ? ''
+    : updateMutation.isError
+      ? getErrorMessage(updateMutation.error)
+      : updateMutation.isSuccess
+        ? hasNewerInput
+          ? '저장 후 추가로 변경한 내용이 있습니다.'
+          : '변경사항을 저장했습니다.'
+        : '';
 
   const applyFilters = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -106,19 +122,25 @@ export function AdminInquiryManager() {
     });
   };
 
-  if (listQuery.isPending) {
+  const accessError = [
+    listQuery.error,
+    detailQuery.error,
+    updateMutation.error,
+  ].find(isAccessError);
+
+  if (accessError) {
     return (
-      <div className="admin-state" role="status">
-        문의를 불러오는 중입니다.
+      <div className="admin-state admin-state-error" role="alert">
+        <strong>{getErrorMessage(accessError)}</strong>
+        <p>관리자 세션을 확인한 뒤 다시 접근해 주세요.</p>
       </div>
     );
   }
 
-  if (isAccessError(listQuery.error)) {
+  if (listQuery.isPending) {
     return (
-      <div className="admin-state admin-state-error" role="alert">
-        <strong>{getErrorMessage(listQuery.error)}</strong>
-        <p>관리자 세션을 확인한 뒤 다시 접근해 주세요.</p>
+      <div className="admin-state" role="status">
+        문의를 불러오는 중입니다.
       </div>
     );
   }
@@ -216,7 +238,7 @@ export function AdminInquiryManager() {
                     aria-label={`${inquiry.businessName} ${inquiry.contactName} 문의 보기`}
                     aria-pressed={selectedId === inquiry.id}
                     onClick={() => {
-                      setSaveMessage('');
+                      updateMutation.reset();
                       setDraft({});
                       setSelectedId(inquiry.id);
                     }}
@@ -272,7 +294,7 @@ export function AdminInquiryManager() {
         </section>
 
         <aside className="admin-detail-panel" aria-live="polite">
-          {!selectedId ? (
+          {!selectedInquiryIsVisible ? (
             <div className="admin-empty">목록에서 문의를 선택해 주세요.</div>
           ) : detailQuery.isPending ? (
             <div className="admin-state" role="status">
@@ -327,6 +349,34 @@ export function AdminInquiryManager() {
                   <dt>예상 예산</dt>
                   <dd>{detailQuery.data.budget || '미입력'}</dd>
                 </div>
+                <div>
+                  <dt>현재 사이트</dt>
+                  <dd>
+                    {detailQuery.data.currentSiteUrl ? (
+                      <a href={detailQuery.data.currentSiteUrl}>
+                        {detailQuery.data.currentSiteUrl}
+                      </a>
+                    ) : (
+                      '미입력'
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>참고 사이트</dt>
+                  <dd>
+                    {detailQuery.data.referenceSiteUrl ? (
+                      <a href={detailQuery.data.referenceSiteUrl}>
+                        {detailQuery.data.referenceSiteUrl}
+                      </a>
+                    ) : (
+                      '미입력'
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>선호 연락 방법</dt>
+                  <dd>{detailQuery.data.preferredContactMethod || '미입력'}</dd>
+                </div>
               </dl>
 
               <section
@@ -341,8 +391,11 @@ export function AdminInquiryManager() {
                 className="admin-update-form"
                 onSubmit={(event) => {
                   event.preventDefault();
-                  setSaveMessage('');
-                  updateMutation.mutate();
+                  updateMutation.mutate({
+                    inquiryId: detailQuery.data.id,
+                    status,
+                    adminMemo,
+                  });
                 }}
               >
                 <label>

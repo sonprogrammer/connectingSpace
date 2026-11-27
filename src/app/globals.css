@@ -708,6 +708,12 @@ section {
   transition: background-color 160ms ease;
 }
 
+.admin-inquiry-list button > span,
+.admin-inquiry-list button time {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .admin-inquiry-list button:hover,
 .admin-inquiry-list button[aria-pressed='true'] {
   background: var(--surface-strong);
@@ -726,10 +732,9 @@ section {
 }
 
 .admin-list-topline strong {
-  overflow: hidden;
+  min-width: 0;
   font-size: 0.95rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .admin-status-badge {
