@@ -30,12 +30,6 @@ const errorMessages: Record<InquiryApiErrorCode, string> = {
     '문의 접수 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.',
 };
 
-const getApiUrl = () => {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ?? '';
-  return `${baseUrl}/public/inquiries`;
-};
-
 const getErrorCode = (status: number, code?: string): InquiryApiErrorCode => {
   if (code === 'DUPLICATE_INQUIRY') return 'DUPLICATE_INQUIRY';
   if (status === 400) return 'VALIDATION_ERROR';
@@ -48,7 +42,7 @@ export const submitInquiry = async (
   let response: Response;
 
   try {
-    response = await fetch(getApiUrl(), {
+    response = await fetch('/public/inquiries', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
