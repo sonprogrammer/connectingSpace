@@ -143,14 +143,13 @@ describe('루트 Worker 관리자 문의 API', () => {
       '2026-11-22T00:00:00.000Z',
     );
     const { handlers, headers } = createAuthorizedHandlers(repository);
-    const request = new Request('http://localhost/admin/inquiries/id', {
-      headers,
-    });
+    const request = () =>
+      new Request('http://localhost/admin/inquiries/id', { headers });
 
-    const success = await handlers.detail(request.clone(), created!.id);
-    const invalid = await handlers.detail(request.clone(), 'not-a-uuid');
+    const success = await handlers.detail(request(), created!.id);
+    const invalid = await handlers.detail(request(), 'not-a-uuid');
     const missing = await handlers.detail(
-      request,
+      request(),
       '00000000-0000-4000-8000-000000000099',
     );
 

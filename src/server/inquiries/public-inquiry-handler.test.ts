@@ -110,6 +110,9 @@ describe('루트 Worker 공개 문의 경계', () => {
       createIfNotDuplicate: async () => {
         throw new Error('synthetic database secret');
       },
+      listAdmin: async () => ({ items: [], page: 1, pageSize: 20, total: 0 }),
+      findById: async () => null,
+      update: async () => null,
     };
     const failing = createPublicInquiryHandler(() => failingRepository);
 

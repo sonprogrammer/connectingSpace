@@ -69,22 +69,28 @@ export const createAdminInquiryHandlers = ({
 
   const getAuthenticatedRepository = async (request: Request) => {
     const auth = await authenticate(request);
-    if (!auth.ok) return { response: auth.response } as const;
+    if (!auth.ok) return { ok: false, response: auth.response } as const;
 
     try {
       const repository = getRepository();
       if (!repository) {
-        return { response: json(internalErrorResponse, 500) } as const;
+        return {
+          ok: false,
+          response: json(internalErrorResponse, 500),
+        } as const;
       }
-      return { repository } as const;
+      return { ok: true, repository } as const;
     } catch {
-      return { response: json(internalErrorResponse, 500) } as const;
+      return {
+        ok: false,
+        response: json(internalErrorResponse, 500),
+      } as const;
     }
   };
 
   const list = async (request: Request): Promise<Response> => {
     const dependency = await getAuthenticatedRepository(request);
-    if ('response' in dependency) return dependency.response;
+    if (!dependency.ok) return dependency.response;
 
     const url = new URL(request.url);
     const parsed = adminInquiryListQuerySchema.safeParse({
@@ -115,7 +121,7 @@ export const createAdminInquiryHandlers = ({
     inquiryId: string,
   ): Promise<Response> => {
     const dependency = await getAuthenticatedRepository(request);
-    if ('response' in dependency) return dependency.response;
+    if (!dependency.ok) return dependency.response;
 
     const id = inquiryIdSchema.safeParse(inquiryId);
     if (!id.success) return json(validationErrorResponse, 400);
@@ -134,7 +140,7 @@ export const createAdminInquiryHandlers = ({
     inquiryId: string,
   ): Promise<Response> => {
     const dependency = await getAuthenticatedRepository(request);
-    if ('response' in dependency) return dependency.response;
+    if (!dependency.ok) return dependency.response;
 
     const id = inquiryIdSchema.safeParse(inquiryId);
     if (!id.success) return json(validationErrorResponse, 400);
