@@ -22,7 +22,7 @@ describe('문의 API 클라이언트', () => {
     vi.restoreAllMocks();
   });
 
-  it('API 주소와 JSON 계약으로 문의를 제출한다', async () => {
+  it('별도 API 주소 설정과 무관하게 같은 출처로 문의를 제출한다', async () => {
     vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'https://api.example.com/');
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
@@ -42,7 +42,7 @@ describe('문의 API 클라이언트', () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.example.com/public/inquiries',
+      '/public/inquiries',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

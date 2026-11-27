@@ -22,7 +22,7 @@
 
 ## 구현 방식
 
-웹이 정적 export이므로 Next 서버 프록시를 만들지 않고, `features/inquiry-form` 안에서 API 클라이언트와 폼 상태를 분리한다. API 주소는 `NEXT_PUBLIC_API_BASE_URL` 환경 변수로 주입하고 기본값은 같은 origin으로 둔다. 요청 경로는 항상 `/public/inquiries`로 고정한다.
+`features/inquiry-form` 안에서 API 클라이언트와 폼 상태를 분리한다. 공개 문의 API가 웹과 같은 루트 Worker에서 동작하므로 별도 API 주소를 주입하지 않고, 요청 경로는 항상 같은 출처의 `/public/inquiries`로 고정한다.
 
 - `shared/api/inquiries.ts`: API 요청과 상태별 오류를 typed result로 변환
 - `features/inquiry-form/model`: 입력 타입, 기본값, 검증, 서버 오류 문구

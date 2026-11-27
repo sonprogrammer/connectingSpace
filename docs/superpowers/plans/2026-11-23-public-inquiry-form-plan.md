@@ -4,7 +4,7 @@
 
 **Goal:** 공개 랜딩페이지의 견적 요청 폼을 `POST /public/inquiries` API와 연결하고 접수 상태를 사용자에게 보여준다.
 
-**Architecture:** API 요청은 `shared/api`에서 분리하고, 입력 검증·상태·폼 UI는 `features/inquiry-form`에 둔다. 랜딩 문의 섹션은 기존 CTA 위치에서 폼 위젯을 조합하며, 정적 export 제약 때문에 Next 서버 프록시는 사용하지 않는다.
+**Architecture:** API 요청은 `shared/api`에서 분리하고, 입력 검증·상태·폼 UI는 `features/inquiry-form`에 둔다. 랜딩 문의 섹션은 기존 CTA 위치에서 폼 위젯을 조합하며, 웹과 API를 제공하는 루트 Worker의 같은 출처로 요청한다.
 
 **Tech Stack:** Next.js App Router, TypeScript, React, Zod, Vitest, Testing Library, native fetch.
 
@@ -14,7 +14,7 @@
 
 - API 경로는 `POST /public/inquiries`로 고정한다.
 - 필수 입력은 업체명·담당자명·이메일·연락처·문의 유형·문의 내용이다.
-- API 주소는 `NEXT_PUBLIC_API_BASE_URL` 환경 변수로 주입하고 기본값은 같은 origin이다.
+- 별도 API 주소 환경변수를 사용하지 않고 같은 출처로 요청한다.
 - 문의 API, 관리자 기능, 자동 알림, 로그인, 파일 업로드는 추가하지 않는다.
 - 제출 중에는 중복 제출을 막고, 성공 후에는 완료 패널을 표시한다.
 - 사용자에게 서버 내부 오류 상세를 노출하지 않는다.
@@ -49,7 +49,7 @@
 
 - [ ] **Step 3: Implement the API client**
 
-  shared 계약 타입을 재사용해 요청 body를 전송한다. `NEXT_PUBLIC_API_BASE_URL`은 끝 슬래시를 제거하고 `/public/inquiries`를 붙이며, 응답 상태별 문구는 API의 `code`를 기준으로 안전하게 매핑한다.
+  shared 계약 타입을 재사용해 요청 body를 같은 출처의 `/public/inquiries`로 전송하며, 응답 상태별 문구는 API의 `code`를 기준으로 안전하게 매핑한다.
 
 - [ ] **Step 4: Run test to verify it passes**
 
