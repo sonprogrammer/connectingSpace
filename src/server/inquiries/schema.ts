@@ -44,9 +44,41 @@ export const apiErrorResponseSchema = z.object({
   message: z.string(),
 });
 
+export const adminInquiryListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  status: inquiryStatusSchema.optional(),
+  type: inquiryTypeSchema.optional(),
+  search: z
+    .string()
+    .trim()
+    .max(100)
+    .transform((value) => value || undefined)
+    .optional(),
+});
+
+export const inquiryIdSchema = z.string().uuid();
+
+export const adminInquiryUpdateSchema = z
+  .object({
+    status: inquiryStatusSchema.optional(),
+    adminMemo: z
+      .string()
+      .trim()
+      .max(10_000)
+      .transform((value) => value || null)
+      .optional(),
+  })
+  .strict()
+  .refine(
+    (input) => input.status !== undefined || input.adminMemo !== undefined,
+  );
+
 export type InquiryType = z.infer<typeof inquiryTypeSchema>;
 export type InquiryStatus = z.infer<typeof inquiryStatusSchema>;
 export type InquiryCreateInput = z.infer<typeof inquiryCreateInputSchema>;
 export type InquiryCreatedResponse = z.infer<
   typeof inquiryCreatedResponseSchema
 >;
+export type AdminInquiryListQuery = z.infer<typeof adminInquiryListQuerySchema>;
+export type AdminInquiryUpdateInput = z.infer<typeof adminInquiryUpdateSchema>;

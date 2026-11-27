@@ -1,5 +1,15 @@
 import type { InquiryCreateInput } from './schema';
-import type { InquiryRecord, InquiryRepository } from './repository';
+import {
+  inquiryRowToRecord,
+  type InquiryListOptions,
+  type InquiryRecord,
+  type InquiryRepository,
+  type InquiryRow,
+  type InquiryUpdateInput,
+} from './repository';
+
+export const escapeD1LikePattern = (value: string) =>
+  value.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_');
 
 export class D1InquiryRepository implements InquiryRepository {
   constructor(
@@ -63,5 +73,85 @@ export class D1InquiryRepository implements InquiryRepository {
       .run();
 
     return result.meta.changes > 0 ? record : null;
+  }
+
+  async listAdmin(options: InquiryListOptions = {}) {
+    const page = options.page ?? 1;
+    const pageSize = options.pageSize ?? 20;
+    const conditions: string[] = [];
+    const bindings: string[] = [];
+
+    if (options.status) {
+      conditions.push('status = ?');
+      bindings.push(options.status);
+    }
+    if (options.type) {
+      conditions.push('type = ?');
+      bindings.push(options.type);
+    }
+    if (options.search?.trim()) {
+      const pattern = `%${escapeD1LikePattern(options.search.trim())}%`;
+      conditions.push(
+        "(business_name LIKE ? ESCAPE '\\' OR contact_name LIKE ? ESCAPE '\\' OR email LIKE ? ESCAPE '\\' OR phone LIKE ? ESCAPE '\\')",
+      );
+      bindings.push(pattern, pattern, pattern, pattern);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const count = await this.db
+      .prepare(`SELECT COUNT(*) AS total FROM inquiries ${where}`)
+      .bind(...bindings)
+      .first<{ total: number }>();
+    const result = await this.db
+      .prepare(
+        `SELECT * FROM inquiries ${where}
+         ORDER BY created_at DESC, id DESC
+         LIMIT ? OFFSET ?`,
+      )
+      .bind(...bindings, pageSize, (page - 1) * pageSize)
+      .all<InquiryRow>();
+
+    return {
+      items: result.results.map(inquiryRowToRecord),
+      page,
+      pageSize,
+      total: count?.total ?? 0,
+    };
+  }
+
+  async findById(id: string) {
+    const row = await this.db
+      .prepare('SELECT * FROM inquiries WHERE id = ?')
+      .bind(id)
+      .first<InquiryRow>();
+
+    return row ? inquiryRowToRecord(row) : null;
+  }
+
+  async update(id: string, input: InquiryUpdateInput) {
+    const assignments: string[] = [];
+    const bindings: (string | null)[] = [];
+
+    if (input.status !== undefined) {
+      assignments.push('status = ?');
+      bindings.push(input.status);
+    }
+    if (input.adminMemo !== undefined) {
+      assignments.push('admin_memo = ?');
+      bindings.push(input.adminMemo);
+    }
+    if (!assignments.length) return this.findById(id);
+
+    const result = await this.db
+      .prepare(
+        `UPDATE inquiries
+         SET ${assignments.join(', ')}, updated_at = ?
+         WHERE id = ?`,
+      )
+      .bind(...bindings, this.now(), id)
+      .run();
+    if (result.meta.changes === 0) return null;
+
+    return this.findById(id);
   }
 }

@@ -117,10 +117,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedInquiries'
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
           $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /admin/inquiries/{inquiryId}:
     parameters:
@@ -137,12 +141,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InquiryDetail'
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '403':
           $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalError'
     patch:
       tags: [관리자 문의]
       summary: 문의 상태·메모 수정
@@ -169,6 +177,8 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /admin/inquiries/{inquiryId}/contracts:
     post:
@@ -561,10 +571,10 @@ paths:
 components:
   securitySchemes:
     adminSession:
-      type: apiKey
-      in: cookie
-      name: CF_Authorization
-      description: Cloudflare Access가 발급한 관리자 세션 쿠키를 검증하며, 기본 세션 정책은 7일이다. 실제 연결 전에는 운영 설정을 별도로 승인한다.
+      type: http
+      scheme: bearer
+      bearerFormat: opaque-session-token
+      description: 현재 로컬·테스트용 메모리 세션 토큰을 검증하며 기본 세션 정책은 7일이다. 실제 관리자 계정과 영속 세션 연결 전에는 운영에 사용할 수 없다.
 
   parameters:
     InquiryId:
@@ -662,6 +672,7 @@ components:
         receivedAt: { type: string, format: date-time }
 
     InquiryUpdateInput:
+      description: 상태 또는 내부 메모 중 하나 이상을 포함해야 한다. 공백만 있는 내부 메모는 삭제로 처리한다.
       type: object
       properties:
         status: { $ref: '#/components/schemas/InquiryStatus' }
@@ -682,6 +693,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/InquirySummary'
         - type: object
+          required: [email, phone, message, updatedAt]
           properties:
             email: { type: string, format: email }
             phone: { type: string }
@@ -692,6 +704,7 @@ components:
             referenceSiteUrl: { type: string, format: uri }
             preferredContactMethod: { type: string }
             adminMemo: { type: string }
+            updatedAt: { type: string, format: date-time }
             contractId: { type: string, format: uuid, nullable: true }
             projectId: { type: string, format: uuid, nullable: true }
 
