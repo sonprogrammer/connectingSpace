@@ -20,7 +20,7 @@
 - 웹: Next.js, TypeScript, App Router, vinext 기반 Cloudflare Worker
 - 스타일: Tailwind CSS, shadcn/ui
 - 상태: React Query는 서버 상태, Zustand는 전역 UI 상태에 사용한다.
-- API: Cloudflare Workers, Hono
+- API: vinext 기반 Cloudflare Worker, Next.js Route Handler
 - 데이터 검증: Zod
 - 테스트: Vitest, Playwright
 - 구조: FSD 원칙을 적용하고, 한 파일에 여러 책임을 섞지 않는다.

@@ -1,11 +1,11 @@
 ---
 name: backend
-description: Use when an agent is building or reviewing the Cloudflare Workers, Hono, Zod, API contract, or data boundary for Connecting Space.
+description: Use when an agent is building or reviewing the root Cloudflare Worker, Next.js Route Handlers, Zod, API contract, or data boundary for Connecting Space.
 ---
 
 # 백엔드 에이전트 역할
 
-이 에이전트는 Connecting Space의 백엔드만 담당한다. Cloudflare Workers·Hono API, API 계약, 입력 검증, 오류 응답, 데이터 경계를 구현·검토하며, 프론트엔드 화면과 사용자 인터랙션은 수정하지 않는다.
+이 에이전트는 Connecting Space의 백엔드만 담당한다. 루트 Cloudflare Worker·Next.js Route Handler, API 계약, 입력 검증, 오류 응답, 데이터 경계를 구현·검토하며, 프론트엔드 화면과 사용자 인터랙션은 수정하지 않는다.
 
 사용자 보고서와 PR 제목·본문은 쉬운 한국어로 작성한다. 파일 경로, API 경로, 코드 식별자, 라이브러리명, 셸 명령어처럼 실행과 추적에 필요한 기술 표기는 원문을 유지하고, 그 의미를 한국어로 설명한다.
 
@@ -19,7 +19,7 @@ description: Use when an agent is building or reviewing the Cloudflare Workers, 
 - 작업 시작 전에 `pwd`와 `git branch --show-current`를 확인한다.
 - 예상한 Backend 워크트리가 없으면 `WORKTREE_PATH="$(bash scripts/prepare-agent-worktree.sh backend <작업종류> <이슈번호> [slug])"`를 실행하고 출력된 경로로 이동한다.
 - `main`에서는 작업하지 않는다. 올바른 Backend 워크트리와 브랜치로 이동한 뒤 작업한다.
-- 기본 작업의 수정 범위는 `apps/api/**`이며, 공통 설정이나 `packages/shared/**`가 필요하면 먼저 플래너에게 보고한다.
+- 기본 작업의 수정 범위는 루트 `src/app/**/route.ts`, `src/server/**`, `src/shared/model/**`이며, 화면 코드나 공통 배포 설정 변경이 필요하면 먼저 플래너에게 보고한다.
 
 ## PR 보고 규칙
 
@@ -29,7 +29,7 @@ PR 생성 직후 첫 코멘트를 남긴다. 코멘트 첫 줄은 `## 역할: Ba
 
 1. `AGENTS.md`, 관련 이슈, `docs/api/openapi.yaml`을 읽는다.
 2. 이번 작업의 엔드포인트와 제외 범위를 확인한다.
-3. Hono 라우팅, 입력 검증, 오류 응답의 책임을 분리한다.
+3. Route Handler, 입력 검증, 오류 응답의 책임을 분리한다.
 4. 공유 타입과 Zod 스키마가 API 계약과 일치하는지 확인한다.
 5. 저장소 인터페이스와 테스트용 구현을 운영 DB보다 먼저 고려한다.
 6. 로컬 검증 결과와 명세 차이를 보고한다.

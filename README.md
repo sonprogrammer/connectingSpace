@@ -7,9 +7,8 @@
 - 루트 `src/**`: Next.js App Router 기반 웹 앱
 - 루트 `vite.config.ts`, `cloudflare.config.ts`: vinext Cloudflare Worker 구성
 - 루트 `src/server/**`: 문의 저장소와 관리자 인증을 포함한 서버 전용 코드
+- 루트 `src/shared/model/**`: 웹과 서버가 함께 사용하는 타입과 Zod 스키마
 - 루트 `db/migrations/**`: 통합 Worker의 로컬 D1 마이그레이션
-- `apps/api`: 이전 검증이 끝날 때까지 유지하는 기존 Hono API Worker
-- `packages/shared`: 이전 검증이 끝날 때까지 유지하는 기존 공유 계약과 스키마
 
 ## 로컬 실행
 
@@ -38,12 +37,6 @@ pnpm build
 pnpm start
 ```
 
-기존 Hono API Worker는 이전 비교가 필요할 때만 별도 명령으로 실행합니다.
-
-```bash
-pnpm dev:api
-```
-
 ## 검증
 
 ```bash
@@ -54,7 +47,7 @@ pnpm format:check
 pnpm build
 ```
 
-`typecheck`, `lint`, `test`는 루트 웹 앱과 `apps/api`, `packages/shared`를 모두 검사합니다. API와 shared가 루트 앱으로 이전·정리되는 후속 작업에서 단일 앱 기준으로 다시 단순화합니다.
+`typecheck`, `lint`, `test`는 웹과 Route Handler가 함께 배포되는 루트 단일 Worker 앱을 검사합니다.
 
 ## 관리자 인증 경계
 
