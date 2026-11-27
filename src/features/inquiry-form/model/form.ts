@@ -3,7 +3,7 @@ import {
   inquiryTypeSchema,
   type InquiryCreateInput,
   type InquiryType,
-} from '@connecting-space/shared';
+} from '../../../shared/model/inquiry';
 import { z } from 'zod';
 
 const optionalText = (max: number) =>
