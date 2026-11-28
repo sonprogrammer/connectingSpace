@@ -271,11 +271,15 @@ paths:
               $ref: '#/components/schemas/ContractCreateInput'
       responses:
         '201':
-          description: 계약서 초안
+          description: 계약서 초안과 고객 링크 원문. 링크 원문은 저장하지 않고 한 번만 반환한다.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContractVersion'
+                type: object
+                required: [contract, accessToken]
+                properties:
+                  contract: { $ref: '#/components/schemas/ContractVersion' }
+                  accessToken: { type: string, minLength: 32 }
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
@@ -336,6 +340,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '201':
+          description: 열람된 계약의 새 버전과 새 고객 링크
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contract, accessToken]
+                properties:
+                  contract: { $ref: '#/components/schemas/ContractVersion' }
+                  accessToken: { type: string, minLength: 32 }
 
   /admin/contracts/{contractId}/ai-draft:
     post:
@@ -407,7 +421,7 @@ paths:
               $ref: '#/components/schemas/ContractApprovalInput'
       responses:
         '200':
-          description: 승인 완료 및 프로젝트 조회 링크 발급
+          description: 승인 완료 및 프로젝트 조회 링크 발급. 재시도해도 같은 링크 토큰을 반환한다.
           content:
             application/json:
               schema:
@@ -420,6 +434,56 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /customer/contracts/{accessToken}/pdf:
+    get:
+      tags: [고객 계약 승인]
+      summary: 고객 계약 PDF 다운로드
+      operationId: downloadCustomerContractPdf
+      parameters:
+        - $ref: '#/components/parameters/AccessToken'
+      responses:
+        '200':
+          description: 현재 유효한 계약 버전의 PDF 파일
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '410':
+          description: 완료된 프로젝트 또는 차단된 계약 링크
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /admin/projects/{projectId}:
+    patch:
+      tags: [관리자 프로젝트]
+      summary: 프로젝트 상태 변경
+      operationId: updateProjectStatus
+      security: [{ adminSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: '#/components/schemas/ProjectStatus' }
+      responses:
+        '200':
+          description: 프로젝트 상태 변경. 완료 상태에서는 고객 링크를 차단한다.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
 
   /admin/contracts/{contractId}/send:
     post:
@@ -935,6 +999,7 @@ components:
         contractId: { type: string, format: uuid }
         name: { type: string }
         status: { $ref: '#/components/schemas/ProjectStatus' }
+        completedAt: { type: string, format: date-time, nullable: true }
         productionMethod: { type: string }
         startDate: { type: string, format: date, nullable: true }
         expectedEndDate: { type: string, format: date, nullable: true }
