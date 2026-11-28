@@ -2,8 +2,12 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  ADMIN_SESSION_COOKIE_NAME,
+  createAdminSessionCookie,
   createAdminAuthGuard,
+  createSignedAdminSessionToken,
   InMemoryAdminAuthProvider,
+  SignedCookieAdminAuthProvider,
   type AdminAuthProvider,
 } from './admin-auth';
 
@@ -14,6 +18,89 @@ const adminPrincipal = {
 };
 
 describe('루트 Worker 관리자 인증 경계', () => {
+  it('서명된 7일 쿠키로 관리자를 인증한다', async () => {
+    const now = 1_700_000_000_000;
+    const secret = 'synthetic-session-secret-at-least-32-characters';
+    const token = await createSignedAdminSessionToken(
+      adminPrincipal,
+      secret,
+      now,
+    );
+    const provider = new SignedCookieAdminAuthProvider({
+      getSecret: () => secret,
+      now: () => now,
+    });
+
+    const principal = await provider.authenticate(
+      new Request('http://localhost/admin/inquiries', {
+        headers: { Cookie: `${ADMIN_SESSION_COOKIE_NAME}=${token}` },
+      }),
+    );
+
+    expect(principal).toEqual({
+      ...adminPrincipal,
+      sessionExpiresAt: now + 7 * 24 * 60 * 60 * 1000,
+    });
+  });
+
+  it('변조된 서명 쿠키를 인증하지 않는다', async () => {
+    const now = 1_700_000_000_000;
+    const secret = 'synthetic-session-secret-at-least-32-characters';
+    const token = await createSignedAdminSessionToken(
+      adminPrincipal,
+      secret,
+      now,
+    );
+    const provider = new SignedCookieAdminAuthProvider({
+      getSecret: () => secret,
+      now: () => now,
+    });
+
+    const principal = await provider.authenticate(
+      new Request('http://localhost/admin/inquiries', {
+        headers: {
+          Cookie: `${ADMIN_SESSION_COOKIE_NAME}=${token.slice(0, -1)}x`,
+        },
+      }),
+    );
+
+    expect(principal).toBeNull();
+  });
+
+  it('만료된 서명 쿠키를 401로 거부하고 제거한다', async () => {
+    const issuedAt = 1_700_000_000_000;
+    const secret = 'synthetic-session-secret-at-least-32-characters';
+    const token = await createSignedAdminSessionToken(
+      adminPrincipal,
+      secret,
+      issuedAt,
+    );
+    const now = issuedAt + 7 * 24 * 60 * 60 * 1000;
+    const provider = new SignedCookieAdminAuthProvider({
+      getSecret: () => secret,
+      now: () => now,
+    });
+    const guard = createAdminAuthGuard(provider, 'admin:inquiries', () => now);
+
+    const result = await guard(
+      new Request('http://localhost/admin/inquiries', {
+        headers: { Cookie: `${ADMIN_SESSION_COOKIE_NAME}=${token}` },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.response.status).toBe(401);
+      expect(result.response.headers.get('set-cookie')).toContain('Max-Age=0');
+    }
+  });
+
+  it('세션 쿠키에 보안 속성과 7일 수명을 설정한다', () => {
+    expect(createAdminSessionCookie('synthetic-token')).toBe(
+      `${ADMIN_SESSION_COOKIE_NAME}=synthetic-token; Max-Age=604800; Path=/admin; HttpOnly; Secure; SameSite=Strict`,
+    );
+  });
+
   it('인증 정보가 없는 요청을 401로 거부한다', async () => {
     const guard = createAdminAuthGuard(new InMemoryAdminAuthProvider());
 
@@ -73,17 +160,26 @@ describe('루트 Worker 관리자 인증 경계', () => {
   });
 
   it('필요한 권한이 없는 인증 사용자를 403으로 거부한다', async () => {
-    const provider = new InMemoryAdminAuthProvider();
-    const token = provider.createSession({
-      subject: 'synthetic-viewer',
-      email: 'synthetic-viewer@example.com',
-      permissions: ['admin:read-only'],
+    const now = 1_700_000_000_000;
+    const secret = 'synthetic-session-secret-at-least-32-characters';
+    const token = await createSignedAdminSessionToken(
+      {
+        subject: 'synthetic-viewer',
+        email: 'synthetic-viewer@example.com',
+        permissions: ['admin:read-only'],
+      },
+      secret,
+      now,
+    );
+    const provider = new SignedCookieAdminAuthProvider({
+      getSecret: () => secret,
+      now: () => now,
     });
-    const guard = createAdminAuthGuard(provider);
+    const guard = createAdminAuthGuard(provider, 'admin:inquiries', () => now);
 
     const result = await guard(
       new Request('http://localhost/admin/probe', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Cookie: `${ADMIN_SESSION_COOKIE_NAME}=${token}` },
       }),
     );
 

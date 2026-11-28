@@ -2,38 +2,35 @@
 
 ## 역할
 
-이 문서는 관리자 전용 API가 공개 API와 분리되어 인증되는 경계와, 로컬 검증에서 사용할 세션 정책을 정의한다.
+이 문서는 루트 Worker의 관리자 로그인과 관리자 전용 API 인증 경계를 정의한다.
 
-## 인증 경계
+## 인증 API
 
-- 공개 API는 인증 없이 접근할 수 있다.
-- `/admin/*` 경로는 `createAdminAuthMiddleware`를 통과해야 한다.
-- 인증 결과는 `AdminPrincipal`로 정규화하고, 이후 관리자 라우트는 `c.get('admin')`에서 사용한다.
-- 인증 정보가 없거나 만료되면 `401 UNAUTHORIZED`를 반환한다.
-- 인증은 되었지만 필요한 권한이 없으면 `403 FORBIDDEN`을 반환한다.
-- 인증 제공자 오류는 내부 상세를 노출하지 않고 `500 INTERNAL_ERROR`로 응답한다.
+- `POST /admin/auth/login`: 같은 출처의 `email`, `password` JSON 요청을 검증하고 7일 쿠키를 발급한다. 본문은 4KiB 이하만 허용한다.
+- `POST /admin/auth/logout`: 같은 출처의 요청에서 세션 쿠키를 제거한다.
+- `GET /admin/auth/session`: 현재 쿠키를 검증하고 인증 상태와 만료 시각을 반환한다.
 
-## 7일 세션 정책
+인증 정보가 없거나 만료되면 `401`, 인증됐지만 `admin:inquiries` 권한이 없으면 `403`을 반환한다. 인증 응답은 `Cache-Control: no-store`를 사용한다.
 
-- 기본 세션 유지 시간은 `ADMIN_SESSION_TTL_SECONDS` 기준 7일이다.
-- 세션 만료 시각은 발급 시각에 7일을 더해 계산한다.
-- 만료 시각과 현재 시각이 같거나 현재 시각이 더 늦으면 만료된 세션으로 판단한다.
-- `AdminAuthProvider`는 만료된 `AdminPrincipal`을 반환하지 않아야 하며, 미들웨어도 `sessionExpiresAt`을 다시 확인한다.
-- 로컬 mock은 메모리에서만 세션을 보관하며 프로세스 종료 시 사라진다.
-- 로컬 mock의 Bearer token은 테스트 전용이며 운영 비밀값이 아니다.
+## 세션 정책
 
-## Cloudflare Access 연결 지점
+- 세션은 HMAC-SHA-256으로 서명한 상태 비저장 쿠키다.
+- 쿠키 이름은 `connecting_space_admin_session`이다.
+- 쿠키 속성은 `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/admin`, `Max-Age=604800`이다.
+- 발급 시각부터 최대 7일만 유효하며, 만료되거나 시간 정책이 잘못된 쿠키는 제거한다.
+- 관리자 문의 조회·상세·수정 API도 같은 쿠키를 검증한다.
+- 로그인·로그아웃·문의 수정은 요청 `Origin`이 현재 요청 URL의 출처와 정확히 같아야 한다.
 
-운영에서는 `AdminAuthProvider` 구현체에 Cloudflare Access의 검증된 identity 전달 방식을 연결한다. 이 작업에서는 Access 계정·JWT 검증 키·도메인·실제 쿠키를 추가하지 않는다.
+## 비밀 바인딩
 
-운영 연결 전에 다음을 결정해야 한다.
+서버는 `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`을 Worker 비밀 바인딩에서 읽는다. 서명 키는 32자 이상이어야 한다. 실제 값은 저장소, 이슈, PR에 기록하지 않는다.
 
-- Cloudflare Access application과 허용 이메일·그룹 정책
-- Access JWT 검증 위치와 키 갱신 방식
-- 관리자 권한과 Access 그룹의 매핑
-- 로그아웃·세션 철회 방식
-- 세션 만료·권한 변경 시 기존 요청 처리 정책
+## 운영 한계와 후속 설정
+
+서명 쿠키는 Worker 메모리나 D1 세션 테이블이 필요 없지만, 탈취된 개별 쿠키를 만료 전에 폐기할 수 없다. 긴급 전체 폐기는 세션 서명 키를 교체한다. 개별 폐기가 필요하면 별도 이슈에서 D1 세션 저장소를 도입한다.
+
+분산 로그인 시도 제한은 Worker 코드의 인스턴스 메모리로 정확히 보장할 수 없다. 운영 배포 전에 Cloudflare Rate Limiting 또는 승인된 영속 저장소 기반 제한을 별도 설정해야 한다. 이번 작업은 Cloudflare 리소스와 운영 D1을 변경하지 않는다.
 
 ## 로컬 검증
 
-`InMemoryAdminAuthProvider`로 합성 관리자 identity와 세션을 발급해 인증 성공, 미인증, 만료, 권한 부족을 테스트한다. 실제 관리자 계정·이메일·비밀값은 사용하지 않는다.
+합성 자격 증명과 합성 서명 키로 로그인 성공·실패, 7일 만료, 변조, 권한 부족, 로그아웃, 출처 검증을 테스트한다. 실제 관리자 계정·비밀값·운영 D1은 사용하지 않는다.

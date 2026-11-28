@@ -14,16 +14,29 @@
 
 의존성을 설치한 뒤 루트에서 웹 개발 서버를 실행합니다.
 
+관리자 인증 로컬 검증에는 합성 값을 `.dev.vars`에 넣습니다. 저장소는 값이 비어 있는 [.dev.vars.example](.dev.vars.example)을 제공하므로 복사 후 테스트용 값만 채우세요. `.dev.vars`는 Git에서 제외됩니다. 이 파일의 값은 로컬 전용이며 실제 비밀값을 입력하지 마세요.
+
 ```bash
 pnpm install
 pnpm verify:migration
 pnpm dev
 ```
 
+로컬에서 로그인 성공 흐름을 재현하려면 별도 터미널에서 다음 값을 설정하고 개발 Worker를 다시 실행합니다.
+
+```text
+ADMIN_EMAIL=qa-admin@example.test
+ADMIN_PASSWORD=synthetic-local-password
+ADMIN_SESSION_SECRET=synthetic-local-session-secret-at-least-32-characters
+```
+
 `pnpm verify:migration`은 `db/migrations`의 SQL을 로컬 D1에만 적용합니다. 운영 D1에는 접근하지 않습니다. 개발 서버는 웹과 아래 API를 같은 `http://localhost:3001` 출처에서 제공합니다.
 
 - `GET /health`: API 상태 확인
 - `POST /public/inquiries`: 공개 문의 접수
+- `POST /admin/auth/login`: 관리자 로그인과 7일 쿠키 발급
+- `POST /admin/auth/logout`: 관리자 세션 쿠키 제거
+- `GET /admin/auth/session`: 현재 관리자 세션 확인
 - `GET /admin/inquiries`: 관리자 문의 목록 조회
 - `GET /admin/inquiries/:inquiryId`: 관리자 문의 상세 조회
 - `PATCH /admin/inquiries/:inquiryId`: 문의 상태·마지막 내부 메모 수정
@@ -51,7 +64,21 @@ pnpm build
 
 ## 관리자 인증 경계
 
-루트 서버 코드에는 `admin:inquiries` 권한과 생성 시점부터 7일인 세션 만료 규칙이 이전되어 있습니다. 관리자 문의 API는 `Authorization: Bearer <token>`을 현재 인증 경계로 사용합니다. 현재 구현은 테스트와 로컬 경계 확인을 위한 메모리 세션 공급자이며 HTTP로 세션을 발급하는 로그인 API는 없습니다. Worker 인스턴스가 재시작되면 세션이 사라지고 다중 인스턴스에서 공유되지 않으므로 운영 로그인으로 사용할 수 없습니다.
+관리자 로그인 요청은 JSON `email`, `password`를 사용합니다. 성공 응답은 `authenticated: true`와 ISO 8601 형식의 `expiresAt`을 반환하며, 브라우저에는 `connecting_space_admin_session` 쿠키를 설정합니다. 세션 확인은 같은 성공 응답을, 로그아웃은 `authenticated: false`를 반환합니다. 인증이 없거나 만료되면 `401`, 세션에 `admin:inquiries` 권한이 없으면 `403`입니다.
+
+로그인 본문은 4 KiB 이하만 허용합니다. 로그인·로그아웃·문의 수정 요청은 요청 URL과 같은 `Origin`만 허용하고, 인증 응답은 캐시하지 않습니다.
+
+세션 쿠키는 7일 동안 유지되며 `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/admin` 속성을 사용합니다. 관리자 문의 API도 이 쿠키만 검증합니다. 프론트는 응답 본문에서 토큰을 읽거나 별도로 저장하지 않습니다.
+
+서버는 실제 값을 저장소에 기록하지 않고 다음 Cloudflare Worker 비밀 바인딩을 읽습니다.
+
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `ADMIN_SESSION_SECRET`: 32자 이상의 무작위 서명 키
+
+이번 구현은 HMAC 서명 쿠키를 사용하므로 Worker 메모리와 D1 세션 테이블에 의존하지 않습니다. 무료 운영과 다중 Worker 인스턴스에는 적합하지만 로그아웃은 현재 브라우저의 쿠키만 제거합니다. 탈취된 쿠키를 7일 만료 전에 개별 폐기할 수 없으며, 긴급 전체 폐기는 `ADMIN_SESSION_SECRET` 교체가 필요합니다. 개별 세션 폐기가 필요하면 별도 이슈에서 D1 세션 저장소를 도입해야 합니다.
+
+분산 로그인 시도 제한은 Worker 인스턴스 메모리만으로 보장하지 않습니다. 운영 배포 전에 Cloudflare Rate Limiting 또는 승인된 영속 저장소 기반 제한을 별도로 설정해야 합니다. 이번 코드 작업은 Cloudflare 리소스를 만들거나 변경하지 않습니다.
 
 관리자 문의 목록은 최신 접수순이며 `status`, `type`, `search`, `page`, `pageSize` 쿼리를 지원합니다. `pageSize`는 기본 20, 최대 100입니다. 수정 API는 현재 유효한 문의 상태값 사이의 전환을 허용하며, 공백만 있는 `adminMemo`는 메모 삭제로 처리합니다.
 

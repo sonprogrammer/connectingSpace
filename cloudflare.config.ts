@@ -15,6 +15,9 @@ export default defineConfig({
         name: 'connecting-space-local',
         dev: { remote: false },
       }),
+      ADMIN_EMAIL: bindings.secret(),
+      ADMIN_PASSWORD: bindings.secret(),
+      ADMIN_SESSION_SECRET: bindings.secret(),
     },
   }),
 });

@@ -1,6 +1,7 @@
 import {
   ADMIN_INQUIRIES_PERMISSION,
   createAdminAuthGuard,
+  isSameOriginRequest,
   type AdminAuthProvider,
 } from '../auth/admin-auth';
 import type { InquiryRecord, InquiryRepository } from './repository';
@@ -23,6 +24,11 @@ const notFoundResponse = {
 const internalErrorResponse = {
   code: 'INTERNAL_ERROR',
   message: '서버에서 요청을 처리하지 못했습니다.',
+} as const;
+
+const forbiddenOriginResponse = {
+  code: 'FORBIDDEN',
+  message: '허용되지 않은 출처의 요청입니다.',
 } as const;
 
 const json = (body: object, status: number) => Response.json(body, { status });
@@ -139,6 +145,9 @@ export const createAdminInquiryHandlers = ({
     request: Request,
     inquiryId: string,
   ): Promise<Response> => {
+    if (!isSameOriginRequest(request))
+      return json(forbiddenOriginResponse, 403);
+
     const dependency = await getAuthenticatedRepository(request);
     if (!dependency.ok) return dependency.response;
 
