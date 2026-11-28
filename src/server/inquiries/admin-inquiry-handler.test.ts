@@ -1,7 +1,12 @@
 // @vitest-environment node
 
 import { describe, expect, it } from 'vitest';
-import { InMemoryAdminAuthProvider } from '../auth/admin-auth';
+import {
+  ADMIN_SESSION_COOKIE_NAME,
+  createSignedAdminSessionToken,
+  InMemoryAdminAuthProvider,
+  SignedCookieAdminAuthProvider,
+} from '../auth/admin-auth';
 import { createAdminInquiryHandlers } from './admin-inquiry-handler';
 import { InMemoryInquiryRepository } from './in-memory-inquiry-repository';
 import type { InquiryCreateInput } from './schema';
@@ -32,6 +37,36 @@ const createAuthorizedHandlers = (repository: InMemoryInquiryRepository) => {
 };
 
 describe('루트 Worker 관리자 문의 API', () => {
+  it('로그인 API와 같은 서명 쿠키로 문의 목록에 접근한다', async () => {
+    const now = 1_700_000_000_000;
+    const secret = 'synthetic-session-secret-at-least-32-characters';
+    const token = await createSignedAdminSessionToken(
+      {
+        subject: 'synthetic-admin@example.com',
+        email: 'synthetic-admin@example.com',
+        permissions: ['admin:inquiries'],
+      },
+      secret,
+      now,
+    );
+    const handlers = createAdminInquiryHandlers({
+      getRepository: () => new InMemoryInquiryRepository(),
+      authProvider: new SignedCookieAdminAuthProvider({
+        getSecret: () => secret,
+        now: () => now,
+      }),
+      now: () => now,
+    });
+
+    const response = await handlers.list(
+      new Request('http://localhost/admin/inquiries', {
+        headers: { Cookie: `${ADMIN_SESSION_COOKIE_NAME}=${token}` },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+  });
+
   it('입력 검증 전에 인증 없음 401과 권한 없음 403을 반환한다', async () => {
     const repository = new InMemoryInquiryRepository();
     const unauthenticated = createAdminInquiryHandlers({
@@ -178,7 +213,11 @@ describe('루트 Worker 관리자 문의 API', () => {
     const patch = (body: object) =>
       new Request('http://localhost/admin/inquiries/id', {
         method: 'PATCH',
-        headers: { ...headers, 'Content-Type': 'application/json' },
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+          Origin: 'http://localhost',
+        },
         body: JSON.stringify(body),
       });
 
@@ -209,7 +248,11 @@ describe('루트 Worker 관리자 문의 API', () => {
     const request = (body: string) =>
       new Request('http://localhost/admin/inquiries/id', {
         method: 'PATCH',
-        headers: { ...headers, 'Content-Type': 'application/json' },
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+          Origin: 'http://localhost',
+        },
         body,
       });
 
@@ -228,6 +271,26 @@ describe('루트 Worker 관리자 문의 API', () => {
     expect(invalidStatus.status).toBe(400);
     expect(empty.status).toBe(400);
     expect(missing.status).toBe(404);
+  });
+
+  it('다른 출처의 문의 변경 요청을 403으로 거부한다', async () => {
+    const { handlers, headers } = createAuthorizedHandlers(
+      new InMemoryInquiryRepository(),
+    );
+    const response = await handlers.update(
+      new Request('http://localhost/admin/inquiries/id', {
+        method: 'PATCH',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+          Origin: 'https://attacker.example',
+        },
+        body: JSON.stringify({ status: '보류' }),
+      }),
+      '00000000-0000-4000-8000-000000000099',
+    );
+
+    expect(response.status).toBe(403);
   });
 
   it('저장소 오류의 세부 내용을 500 응답에 노출하지 않는다', async () => {
