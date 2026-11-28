@@ -14,10 +14,20 @@
 
 의존성을 설치한 뒤 루트에서 웹 개발 서버를 실행합니다.
 
+관리자 인증 로컬 검증에는 합성 값을 `.dev.vars`에 넣습니다. 저장소는 값이 비어 있는 [.dev.vars.example](.dev.vars.example)을 제공하므로 복사 후 테스트용 값만 채우세요. `.dev.vars`는 Git에서 제외됩니다. 이 파일의 값은 로컬 전용이며 실제 비밀값을 입력하지 마세요.
+
 ```bash
 pnpm install
 pnpm verify:migration
 pnpm dev
+```
+
+로컬에서 로그인 성공 흐름을 재현하려면 별도 터미널에서 다음 값을 설정하고 개발 Worker를 다시 실행합니다.
+
+```text
+ADMIN_EMAIL=qa-admin@example.test
+ADMIN_PASSWORD=synthetic-local-password
+ADMIN_SESSION_SECRET=synthetic-local-session-secret-at-least-32-characters
 ```
 
 `pnpm verify:migration`은 `db/migrations`의 SQL을 로컬 D1에만 적용합니다. 운영 D1에는 접근하지 않습니다. 개발 서버는 웹과 아래 API를 같은 `http://localhost:3001` 출처에서 제공합니다.
