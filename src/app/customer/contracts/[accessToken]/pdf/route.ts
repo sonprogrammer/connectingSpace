@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers';
 import fontkit from '@pdf-lib/fontkit';
 import { PDFDocument } from 'pdf-lib';
 import koreanFontUrl from '@fontsource/noto-sans-kr/files/noto-sans-kr-korean-400-normal.woff?inline';
+import { wrapPdfText } from '@/server/contracts/pdf-layout';
 import {
   createAdminAuthProvider,
   type AdminAuthBindings,
@@ -35,20 +36,21 @@ export const GET = async (request: Request, context: Context) => {
   let page = pdf.addPage();
   const fontSize = 11;
   let y = page.getHeight() - 48;
-  const lines = [
+  const content = [
     contract.title,
     `Contract: ${contract.contractId}`,
     `Amount: ${contract.totalAmount}`,
     `Schedule: ${contract.schedule}`,
     '',
     ...contract.body.split('\n'),
-  ];
+  ].join('\n');
+  const lines = wrapPdfText(content, font, fontSize, page.getWidth() - 96);
   for (const line of lines) {
     if (y < 48) {
       page = pdf.addPage();
       y = page.getHeight() - 48;
     }
-    page.drawText(line.slice(0, 110), {
+    page.drawText(line, {
       x: 48,
       y,
       size: fontSize,

@@ -41,6 +41,20 @@ const token = () => {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 };
+const contractBody = (input: z.infer<typeof createSchema>) =>
+  [
+    input.title,
+    `제작 범위: ${input.scope}`,
+    `총 금액: ${input.totalAmount}`,
+    `일정: ${input.schedule}`,
+    `수정 범위: ${input.revisionScope}`,
+    `결제 조건: ${input.paymentTerms}`,
+    `제작 방식: ${input.productionMethod}`,
+    input.externalCosts ? `외부 비용: ${input.externalCosts}` : '',
+    input.specialNotes ? `특이사항: ${input.specialNotes}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 
 export const createContractHandlers = (options: {
   db: D1Database;
@@ -84,21 +98,7 @@ export const createContractHandlers = (options: {
     const timestamp = now();
     const accessToken = token();
     const accessHash = await digest(accessToken);
-    const body = [
-      parsed.data.title,
-      `제작 범위: ${parsed.data.scope}`,
-      `총 금액: ${parsed.data.totalAmount}`,
-      `일정: ${parsed.data.schedule}`,
-      `수정 범위: ${parsed.data.revisionScope}`,
-      `결제 조건: ${parsed.data.paymentTerms}`,
-      `제작 방식: ${parsed.data.productionMethod}`,
-      parsed.data.externalCosts
-        ? `외부 비용: ${parsed.data.externalCosts}`
-        : '',
-      parsed.data.specialNotes ?? '',
-    ]
-      .filter(Boolean)
-      .join('\n\n');
+    const body = contractBody(parsed.data);
     await options.db
       .prepare(
         `INSERT INTO contracts (id,inquiry_id,version,status,title,body,scope,total_amount,schedule,revision_scope,payment_terms,production_method,external_costs,special_notes,created_at,updated_at) VALUES (?,?,?,'작성 중',?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -172,7 +172,7 @@ export const createContractHandlers = (options: {
       }>();
     if (!contract || !['작성 중', '전송됨'].includes(contract.status))
       return json(error('CONFLICT', '수정할 수 없는 계약입니다.'), 409);
-    const body = `${parsed.data.title}\n\n${parsed.data.scope}\n\n${parsed.data.schedule}\n\n${parsed.data.paymentTerms}`;
+    const body = contractBody(parsed.data);
     const timestamp = now();
     if (contract.viewed_at) {
       const nextId = id();
@@ -254,13 +254,21 @@ export const createContractHandlers = (options: {
         .bind(timestamp, timestamp, timestamp, hash),
       options.db
         .prepare(
-          `SELECT c.id AS contractId,c.title,c.body,c.total_amount AS totalAmount,c.schedule,c.status FROM contracts c JOIN contract_access_links l ON l.contract_id=c.id LEFT JOIN projects p ON p.contract_id=c.id WHERE l.token_hash=? AND l.status='활성' AND c.status IN ('전송됨','승인됨') AND p.completed_at IS NULL`,
+          `SELECT c.id AS contractId,c.title,c.body,c.total_amount AS totalAmount,c.schedule,CASE WHEN c.status='승인됨' THEN '승인 완료' ELSE '승인 대기' END AS status FROM contracts c JOIN contract_access_links l ON l.contract_id=c.id LEFT JOIN projects p ON p.contract_id=c.id WHERE l.token_hash=? AND l.status='활성' AND c.status IN ('전송됨','승인됨') AND p.completed_at IS NULL`,
         )
         .bind(hash),
     ]);
     const view = result[1]?.results?.[0];
-    return view
-      ? json(view as object, 200)
+    if (view) return json(view as object, 200);
+    const knownLink = await options.db
+      .prepare('SELECT id FROM contract_access_links WHERE token_hash=?')
+      .bind(hash)
+      .first();
+    return knownLink
+      ? json(
+          error('LINK_EXPIRED', '계약 링크가 만료되었거나 차단되었습니다.'),
+          410,
+        )
       : json(error('NOT_FOUND', '계약서를 찾을 수 없습니다.'), 404);
   };
 
@@ -279,9 +287,6 @@ export const createContractHandlers = (options: {
     const hash = await digest(accessToken);
     const timestamp = now();
     const projectId = id();
-    const linkId = id();
-    const plainToken = token();
-    const linkHash = await digest(plainToken);
     const contract = await options.db
       .prepare(
         `SELECT c.id,c.inquiry_id,c.version,c.production_method,i.business_name FROM contracts c JOIN contract_access_links l ON l.contract_id=c.id JOIN inquiries i ON i.id=c.inquiry_id WHERE l.token_hash=? AND l.status='활성' AND c.status IN ('전송됨','승인됨')`,
@@ -299,7 +304,7 @@ export const createContractHandlers = (options: {
     const result = await options.db.batch([
       options.db
         .prepare(
-          "UPDATE contracts SET status='승인됨',approval_identity=?,approved_at=COALESCE(approved_at,?),updated_at=? WHERE id=? AND status IN ('전송됨','승인됨')",
+          "UPDATE contracts SET status='승인됨',approval_identity=COALESCE(approval_identity,?),approved_at=COALESCE(approved_at,?),updated_at=CASE WHEN status='전송됨' THEN ? ELSE updated_at END WHERE id=? AND status IN ('전송됨','승인됨')",
         )
         .bind(parsed.data.customerName, timestamp, timestamp, contract.id),
       options.db
@@ -318,11 +323,6 @@ export const createContractHandlers = (options: {
           contract.inquiry_id,
           contract.id,
         ),
-      options.db
-        .prepare(
-          "INSERT INTO project_access_links (id,project_id,token_hash,status,created_at) SELECT ?,id,?,'활성',? FROM projects WHERE contract_id=? ON CONFLICT(token_hash) DO NOTHING",
-        )
-        .bind(linkId, linkHash, timestamp, contract.id),
     ]);
     if (
       !result[0]?.meta.changes &&
@@ -336,19 +336,33 @@ export const createContractHandlers = (options: {
       .prepare('SELECT id FROM projects WHERE contract_id=?')
       .bind(contract.id)
       .first<{ id: string }>();
-    const actualLink = project
-      ? await options.db
-          .prepare(
-            'SELECT token_hash FROM project_access_links WHERE project_id=? AND token_hash=?',
-          )
-          .bind(project.id, linkHash)
-          .first()
-      : null;
+    if (!project)
+      return json(error('CONFLICT', '프로젝트를 생성할 수 없습니다.'), 409);
+    // 승인한 계약 링크와 프로젝트 링크는 같은 고객 capability를 공유한다.
+    // 원문 토큰을 저장하거나 DB 해시로부터 재구성하지 않아 재시도에도 안전하다.
+    const projectAccessToken = accessToken;
+    const projectAccessHash = hash;
+    await options.db.batch([
+      options.db
+        .prepare(
+          "UPDATE project_access_links SET status='차단',revoked_at=? WHERE project_id=? AND status='활성' AND token_hash<>?",
+        )
+        .bind(timestamp, project.id, projectAccessHash),
+      options.db
+        .prepare(
+          "INSERT OR IGNORE INTO project_access_links (id,project_id,token_hash,status,created_at) VALUES (?,?,?,'활성',?)",
+        )
+        .bind(id(), project.id, projectAccessHash, timestamp),
+    ]);
+    const approvedAt = await options.db
+      .prepare('SELECT approved_at FROM contracts WHERE id=?')
+      .bind(contract.id)
+      .first<{ approved_at: string | null }>();
     return json(
       {
-        approvedAt: timestamp,
-        projectId: project?.id,
-        projectAccessToken: actualLink ? plainToken : undefined,
+        approvedAt: approvedAt?.approved_at ?? timestamp,
+        projectId: project.id,
+        projectAccessToken,
       },
       200,
     );

@@ -421,7 +421,7 @@ paths:
               $ref: '#/components/schemas/ContractApprovalInput'
       responses:
         '200':
-          description: 승인 완료 및 프로젝트 조회 링크 발급
+          description: 승인 완료 및 프로젝트 조회 링크 발급. 재시도해도 같은 링크 토큰을 반환한다.
           content:
             application/json:
               schema:
